@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/dartvandru/eventuate-tram-core-nodejs#readme",
   "dependencies": {
+    "bluebird": "^3.5.5",
     "invariant": "^2.2.4",
     "is-port-reachable": "^2.0.1",
     "kafka-node": "^4.1.3",
