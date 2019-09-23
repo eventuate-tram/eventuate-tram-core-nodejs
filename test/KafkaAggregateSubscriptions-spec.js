@@ -33,7 +33,7 @@ describe('KafkaAggregateSubscriptions', function () {
       try {
         const subscription = await kafkaAggregateSubscriptions.subscribe({ subscriberId, topics: [ topic ], eventHandler });
         expect(subscription).to.be.instanceOf(ConsumerGroup);
-        await helpers.produceKafkaMessage(topic, JSON.stringify({ eventData: { message: 'Test message' } }));
+        await helpers.putMessage(topic, JSON.stringify({ eventData: { message: 'Test message' } }));
       } catch (err) {
         reject(err);
       }

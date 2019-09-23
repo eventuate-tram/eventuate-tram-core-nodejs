@@ -1,11 +1,8 @@
 const { expect } = require('chai');
-const kafka = require('kafka-node');
-const Producer = kafka.Producer;
-const client = new kafka.KafkaClient({
-  kafkaHost: process.env.EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING,
-  sessionTimeout: 30000
-});
-const producer = new Producer(client);
+const { insertIntoMessageTable } = require('../../lib/mysql/eventuateCommonDbOperations');
+const IdGenerator = require('../../lib/IdGenerator');
+
+const idGenerator = new IdGenerator();
 
 const expectEnsureTopicExists = (res) => {
   expect(res).to.be.an('Array');
@@ -24,21 +21,15 @@ const expectEnsureTopicExists = (res) => {
   expect(metadataObj['metadata']).to.be.an('Object');
 };
 
-const produceKafkaMessage = (topic, message) => new Promise((resolve, reject) => {
-  const payloads = [ { topic, messages: message, partition: 0 } ];
-  producer.on('ready', () => {
-    producer.send(payloads, (err, data) => {
-      console.log(data);
-      resolve();
-    });
-  });
+const putMessage = async (topic, payload, messageId) => {
+  if (!messageId) {
+    messageId = await idGenerator.genIdInternal();
+  }
 
-  producer.on('error', (err) => {
-    reject(err);
-  });
-});
+  return insertIntoMessageTable(messageId, payload, topic);
+};
 
 module.exports = {
   expectEnsureTopicExists,
-  produceKafkaMessage
+  putMessage
 };
