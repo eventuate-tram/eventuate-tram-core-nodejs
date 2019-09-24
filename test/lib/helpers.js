@@ -25,11 +25,21 @@ const putMessage = async (topic, payload, messageId) => {
   if (!messageId) {
     messageId = await idGenerator.genIdInternal();
   }
-
   return insertIntoMessageTable(messageId, payload, topic);
+};
+
+const expectEventId = (eventId) => {
+  expect(eventId).to.be.a('String');
+  expect(eventId).to.match(/^[0-9A-z]{16}-[0-9A-z]{16}$/);
+};
+
+const onlyUnique = (value, index, self) => {
+  return self.indexOf(value) === index;
 };
 
 module.exports = {
   expectEnsureTopicExists,
-  putMessage
+  putMessage,
+  expectEventId,
+  onlyUnique
 };
