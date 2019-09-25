@@ -37,9 +37,22 @@ const onlyUnique = (value, index, self) => {
   return self.indexOf(value) === index;
 };
 
+const expectMessage = (message, messageId, topic, payload) => {
+  expect(message).to.haveOwnProperty('id');
+  expect(message.id).eq(messageId);
+  expect(message).to.haveOwnProperty('destination');
+  expect(message.destination).eq(topic);
+  expect(message).to.haveOwnProperty('headers');
+  expect(message).to.haveOwnProperty('payload');
+  expect(message.payload).eq(payload);
+  expect(message).to.haveOwnProperty('published');
+  expect(message).to.haveOwnProperty('creation_time');
+};
+
 module.exports = {
   expectEnsureTopicExists,
   putMessage,
   expectEventId,
-  onlyUnique
+  onlyUnique,
+  expectMessage
 };

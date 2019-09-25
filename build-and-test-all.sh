@@ -2,6 +2,6 @@
 
 docker-compose -f docker-compose-mysql-binlog-kafka.yml up -d
 
-npm test
+#npm test
 
-docker-compose -f docker-compose-mysql-binlog-kafka.yml down -v
+#docker-compose -f docker-compose-mysql-binlog-kafka.yml down -v

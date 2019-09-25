@@ -1,7 +1,11 @@
+const bPromise = require('bluebird');
 const chai = require('chai');
 const { expect } = chai;
-const bPromise = require('bluebird');
+const chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+
 const { expectEventId, onlyUnique } = require('./lib/helpers');
+
 
 const IdGenerator = require('../lib/IdGenerator');
 
@@ -16,7 +20,7 @@ describe('IdGenerator test', function () {
     expectEventId(id);
   });
 
-  it('should generate more than MAX COUNTER ID\'s', async () => {
+  it('should generate MAX_COUNTER ID\'s', async () => {
     console.log('MAX_COUNTER: ', IdGenerator.maxCounter);
     const ids = await genIds(3000);
     console.log(`Generated ${ids.length} ID's`);
