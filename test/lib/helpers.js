@@ -38,6 +38,7 @@ const onlyUnique = (value, index, self) => {
 };
 
 const expectMessage = (message, messageId, topic, payload) => {
+  expect(message).to.be.an('Object');
   expect(message).to.haveOwnProperty('id');
   expect(message.id).eq(messageId);
   expect(message).to.haveOwnProperty('destination');
