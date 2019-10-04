@@ -10,13 +10,13 @@ const { insertIntoMessageTable, getMessageById } = require('../lib/mysql/eventua
 
 const idGenerator = new IdGenerator();
 const topic = 'Database-test-topic';
-const payload = 'Test';
+const payload = '{"text": "test database"}';
 
 describe('insertIntoMessageTable()', () => {
   it('should insert message', async () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().getTime();
-    const headers = makeMessageHeaders({ messageId, partitionId: 1, topic, creationTime });
+    const headers = makeMessageHeaders({ messageId, partitionId: 0, topic, creationTime });
     await insertIntoMessageTable(messageId, payload, topic, creationTime, headers);
     const message = await getMessageById(messageId);
     helpers.expectMessage(message, messageId, topic, payload);
@@ -26,7 +26,7 @@ describe('insertIntoMessageTable()', () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().getTime();
     const trx = await knex.transaction();
-    const headers = makeMessageHeaders({ messageId, partitionId: 1, topic, creationTime });
+    const headers = makeMessageHeaders({ messageId, partitionId: 0, topic, creationTime });
     await insertIntoMessageTable(messageId, payload, topic, creationTime, headers, { trx });
     await trx.commit();
     const message = await getMessageById(messageId);
@@ -37,7 +37,7 @@ describe('insertIntoMessageTable()', () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().getTime();
     const trx = await knex.transaction();
-    const headers = makeMessageHeaders({ messageId, partitionId: 1, topic, creationTime });
+    const headers = makeMessageHeaders({ messageId, partitionId: 0, topic, creationTime });
     await insertIntoMessageTable(messageId, payload, topic, creationTime, headers, { trx });
     await trx.rollback();
     const message = await getMessageById(messageId);
