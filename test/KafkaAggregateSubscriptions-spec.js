@@ -11,10 +11,15 @@ const KafkaProducer = require('../lib/kafka/KafkaProducer');
 chai.use(chaiAsPromised);
 
 const kafkaAggregateSubscriptions = new KafkaAggregateSubscriptions();
-const producer = new KafkaProducer();
+const kafkaProducer = new KafkaProducer();
 const idGenerator = new IdGenerator();
-const timeout = 5000000;
+const timeout = 20000;
 const topic = 'test-topic';
+
+after(async () => {
+  await kafkaAggregateSubscriptions.disconnect();
+  await kafkaProducer.disconnect();
+});
 
 describe('KafkaAggregateSubscriptions', function () {
   this.timeout(timeout);
@@ -25,7 +30,7 @@ describe('KafkaAggregateSubscriptions', function () {
   });
 
   it('should receive Kafka message', async () => {
-    await producer.connect();
+    await kafkaProducer.connect();
 
     const subscriberId = 'test-sb-id';
     return new Promise(async (resolve, reject) => {
@@ -53,7 +58,7 @@ describe('KafkaAggregateSubscriptions', function () {
             key: '0',
             timestamp: new Date(creationTime).toUTCString()
           });
-        producer.send(topic, message);
+        kafkaProducer.send(topic, message);
       } catch (err) {
         reject(err);
       }

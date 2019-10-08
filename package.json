@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/IdGenerator-spec.js"
+    "test": "mocha test/IdGenerator-spec.js test/database-spec.js test/KafkaProducer-spec.js test/KafkaAggregateSubscriptions-spec.js"
   },
   "repository": {
     "type": "git",
