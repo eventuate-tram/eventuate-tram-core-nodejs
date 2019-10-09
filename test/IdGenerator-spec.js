@@ -6,7 +6,6 @@ chai.use(chaiAsPromised);
 
 const { expectEventId, onlyUnique } = require('./lib/helpers');
 
-
 const IdGenerator = require('../lib/IdGenerator');
 
 const idGenerator = new IdGenerator();

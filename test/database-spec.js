@@ -5,19 +5,22 @@ const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const helpers = require('./lib/helpers');
 const IdGenerator = require('../lib/IdGenerator');
-const { makeMessageHeaders } = require('../lib/utils');
-const { insertIntoMessageTable, getMessageById } = require('../lib/mysql/eventuateCommonDbOperations');
+const MessageProducer = require('../lib/MessageProducer');
+const { getMessageById } = require('../lib/mysql/eventuateCommonDbOperations');
 
 const idGenerator = new IdGenerator();
+const messageProducer = new MessageProducer();
+
 const topic = 'Database-test-topic';
 const payload = '{"text": "test database"}';
+const eventAggregateType = 'Account';
+const eventType = 'charge';
 
 describe('insertIntoMessageTable()', () => {
   it('should insert message', async () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().getTime();
-    const headers = makeMessageHeaders({ messageId, partitionId: 0, topic, creationTime });
-    await insertIntoMessageTable(messageId, payload, topic, creationTime, headers);
+    await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType);
     const message = await getMessageById(messageId);
     helpers.expectMessage(message, messageId, topic, payload);
   });
@@ -26,8 +29,7 @@ describe('insertIntoMessageTable()', () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().getTime();
     const trx = await knex.transaction();
-    const headers = makeMessageHeaders({ messageId, partitionId: 0, topic, creationTime });
-    await insertIntoMessageTable(messageId, payload, topic, creationTime, headers, { trx });
+    await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
     await trx.commit();
     const message = await getMessageById(messageId);
     helpers.expectMessage(message, messageId, topic, payload);
@@ -37,8 +39,7 @@ describe('insertIntoMessageTable()', () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().getTime();
     const trx = await knex.transaction();
-    const headers = makeMessageHeaders({ messageId, partitionId: 0, topic, creationTime });
-    await insertIntoMessageTable(messageId, payload, topic, creationTime, headers, { trx });
+    await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
     await trx.rollback();
     const message = await getMessageById(messageId);
     expect(message).to.be.undefined;
