@@ -1,0 +1,34 @@
+{
+  "name": "eventuate-tram-core-nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/IdGenerator-spec.js test/database-spec.js test/KafkaProducer-spec.js test/KafkaAggregateSubscriptions-spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dartvandru/eventuate-tram-core-nodejs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dartvandru/eventuate-tram-core-nodejs/issues"
+  },
+  "homepage": "https://github.com/dartvandru/eventuate-tram-core-nodejs#readme",
+  "dependencies": {
+    "getmac": "^1.4.6",
+    "invariant": "^2.2.4",
+    "is-port-reachable": "^2.0.1",
+    "kafka-node": "^4.1.3",
+    "knex": "^0.19.4",
+    "log4js": "^5.1.0",
+    "promise-mysql": "^4.1.0"
+  },
+  "devDependencies": {
+    "bluebird": "^3.5.5",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^6.2.0"
+  }
+}

@@ -1,0 +1,18 @@
+version:               2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10.16.3-stretch-browsers
+    working_directory: ~/eventuate-tram-core-nodejs
+    steps:
+      - checkout
+      - run:
+        name: install-npm-wee
+        command: npm install
+      - save_cache: # special step to save the dependency cache
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+          paths:
+            - ./node_modules
+      - run: # run tests
+          name: test
+          command: npm test
