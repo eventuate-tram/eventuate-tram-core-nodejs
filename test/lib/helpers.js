@@ -50,10 +50,37 @@ const expectMessage = (message, messageId, topic, payload) => {
   expect(message).to.haveOwnProperty('creation_time');
 };
 
+const expectMessageHeaders = (headers, headersData) => {
+  expect(headers).to.haveOwnProperty('ID');
+  expect(headers.ID).to.be.a('String');
+  expect(headers.ID).eq(headersData.id);
+
+  expect(headers).to.haveOwnProperty('PARTITION_ID');
+  expect(headers.PARTITION_ID).to.be.a('String');
+  expect(headers.PARTITION_ID).eq(headersData.partitionId.toString());
+
+  expect(headers).to.haveOwnProperty('DESTINATION');
+  expect(headers.DESTINATION).to.be.a('String');
+  expect(headers.DESTINATION).eq(headersData.destination);
+
+  expect(headers).to.haveOwnProperty('DATE');
+  expect(headers.DATE).to.be.a('String');
+  expect(headers.DATE).eq(new Date(headersData.creationTime).toUTCString());
+
+  expect(headers).to.haveOwnProperty('event-aggregate-type');
+  expect(headers['event-aggregate-type']).to.be.a('String');
+  expect(headers['event-aggregate-type']).eq(headersData.eventAggregateType);
+
+  expect(headers).to.haveOwnProperty('event-type');
+  expect(headers['event-type']).to.be.a('String');
+  expect(headers['event-type']).eq(headersData.eventType);
+};
+
 module.exports = {
   expectEnsureTopicExists,
   putMessage,
   expectEventId,
   onlyUnique,
-  expectMessage
+  expectMessage,
+  expectMessageHeaders
 };
