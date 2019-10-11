@@ -47,7 +47,6 @@ describe('KafkaAggregateSubscriptions', function () {
 
       try {
         const subscription = await kafkaAggregateSubscriptions.subscribe({ subscriberId, topics: [ topic ], messageHandler });
-        expect(subscription).to.be.instanceOf(ConsumerGroup);
 
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().getTime();
