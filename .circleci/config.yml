@@ -15,4 +15,6 @@ jobs:
             - ./node_modules
       - run: # run tests
           name: test
-          command: npm test
+          command: |
+            . ./.circleci/setenv-circle-ci.sh
+            npm test
