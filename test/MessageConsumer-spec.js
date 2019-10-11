@@ -1,16 +1,15 @@
 const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
-const { ConsumerGroup } = require('kafka-node');
 const helpers = require('./lib/helpers');
-const KafkaAggregateSubscriptions = require('../lib/kafka/KafkaAggregateSubscriptions');
+const MessageConsumer = require('../lib/kafka/MessageConsumer');
 const IdGenerator = require('../lib/IdGenerator');
 const KafkaProducer = require('../lib/kafka/KafkaProducer');
 const MessageProducer = require('../lib/MessageProducer');
 
 chai.use(chaiAsPromised);
 
-const kafkaAggregateSubscriptions = new KafkaAggregateSubscriptions();
+const messageConsumer = new MessageConsumer();
 const kafkaProducer = new KafkaProducer();
 const idGenerator = new IdGenerator();
 const messageProducer = new MessageProducer();
@@ -21,15 +20,15 @@ const eventAggregateType = 'Account';
 const eventType = 'charge';
 
 after(async () => {
-  await kafkaAggregateSubscriptions.disconnect();
+  await messageConsumer.disconnect();
   await kafkaProducer.disconnect();
 });
 
-describe('KafkaAggregateSubscriptions', function () {
+describe('MessageConsumer', function () {
   this.timeout(timeout);
 
   it('should ensureTopicExistsBeforeSubscribing()', async () => {
-    const result = await kafkaAggregateSubscriptions.ensureTopicExistsBeforeSubscribing({ topics: [ topic ]});
+    const result = await messageConsumer.ensureTopicExistsBeforeSubscribing({ topics: [ topic ]});
     helpers.expectEnsureTopicExists(result);
   });
 
@@ -46,7 +45,7 @@ describe('KafkaAggregateSubscriptions', function () {
       };
 
       try {
-        const subscription = await kafkaAggregateSubscriptions.subscribe({ subscriberId, topics: [ topic ], messageHandler });
+        await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
 
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().getTime();
