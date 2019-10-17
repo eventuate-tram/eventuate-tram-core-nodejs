@@ -2,14 +2,14 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const MessageConsumer = require('../lib/kafka/MessageConsumer');
+const KafkaAggregateSubscriptions = require('../lib/kafka/KafkaAggregateSubscriptions');
 const IdGenerator = require('../lib/IdGenerator');
 const KafkaProducer = require('../lib/kafka/KafkaProducer');
 const MessageProducer = require('../lib/MessageProducer');
 
 chai.use(chaiAsPromised);
 
-const messageConsumer = new MessageConsumer();
+const kafkaAggregateSubscriptions = new KafkaAggregateSubscriptions();
 const kafkaProducer = new KafkaProducer();
 const idGenerator = new IdGenerator();
 const messageProducer = new MessageProducer();
@@ -25,32 +25,24 @@ before(async () => {
 
 after(async () => {
   await Promise.all([
-    messageConsumer.disconnect(),
+    kafkaAggregateSubscriptions.unsubscribe(),
     kafkaProducer.disconnect()
   ]);
 });
 
-describe('MessageConsumer', function () {
+describe('KafkaAggregateSubscriptions', function () {
   this.timeout(timeout);
 
-  it('should ensureTopicExistsBeforeSubscribing()', async () => {
-    const result = await messageConsumer.ensureTopicExistsBeforeSubscribing({ topics: [ topic ]});
-    helpers.expectEnsureTopicExists(result);
-  });
-
   it('should receive Kafka message', async () => {
-    const subscriberId = 'test-sb-id';
+    const groupId = 'test-sb-id';
     return new Promise(async (resolve, reject) => {
-      const messageHandler = (message) => {
-        console.log('messageHandler');
-        console.log(message);
-        helpers.expectKafkaMessage(message);
-        resolve();
-        return Promise.resolve(message);
-      };
-
       try {
-        await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
+        kafkaAggregateSubscriptions.on('message', (message) => {
+          console.log('on message', message);
+          resolve();
+        });
+
+        await kafkaAggregateSubscriptions.subscribe({ groupId, topics: [ topic ] });
 
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().getTime();
@@ -71,3 +63,4 @@ describe('MessageConsumer', function () {
     });
   });
 });
+
