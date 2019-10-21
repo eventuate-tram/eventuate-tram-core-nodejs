@@ -111,6 +111,18 @@ const expectKafkaMessage = (message) => {
   }
 };
 
+const expectMessageForDomainEvent = (message, payload) => {
+  expect(message).to.haveOwnProperty('payload');
+  expect(message.payload).to.be.a('String');
+  if (typeof (payload === 'object')) {
+    payload = JSON.stringify(payload);
+  }
+  expect(message.payload).eq(payload);
+
+  expect(message).to.haveOwnProperty('headers');
+  expectMessageHeaders(message.headers);
+};
+
 module.exports = {
   expectEnsureTopicExists,
   putMessage,
@@ -118,5 +130,6 @@ module.exports = {
   onlyUnique,
   expectDbMessage,
   expectMessageHeaders,
-  expectKafkaMessage
+  expectKafkaMessage,
+  expectMessageForDomainEvent
 };
