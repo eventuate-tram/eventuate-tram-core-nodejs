@@ -18,7 +18,9 @@ jobs:
           command: docker-compose -f docker-compose-mysql-binlog-kafka.yml up -d
       - run: # run tests
           name: test
-          command: npm test
+          command:  |
+            . ./.circleci/setenv-circle-ci.sh
+            npm test
       - run:
           name: stop-docker
           command: docker-compose -f docker-compose-mysql-binlog-kafka.yml down -v
