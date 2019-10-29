@@ -7,7 +7,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - eventuate-tram-core-nodejs-{{ checksum "package-lock.json" }}
+            - eventuate-tram-core-nodejs-{{ checksum "package.json" }}
             - eventuate-tram-core-nodejs-
           paths:
             - ./node_modules
@@ -15,7 +15,7 @@ jobs:
           name: install-npm-wee
           command: npm install
       - save_cache: # special step to save the dependency cache
-          key: eventuate-tram-core-nodejs-{{ checksum "package-lock.json" }}
+          key: eventuate-tram-core-nodejs-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
@@ -30,6 +30,7 @@ jobs:
           command: |
             . ./.circleci/setenv-circle-ci.sh
             docker-compose -f docker-compose-mysql-binlog-kafka.yml up -d
+            sleep 30
       - run: # run tests
           name: test
           command:  |
