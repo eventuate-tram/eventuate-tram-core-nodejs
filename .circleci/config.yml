@@ -13,8 +13,14 @@ jobs:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
+      - run:
+          name: start-docker
+          command: docker-compose -f docker-compose-mysql-binlog-kafka.yml up -d
       - run: # run tests
           name: test
-          command: |
+          command:  |
             . ./.circleci/setenv-circle-ci.sh
             npm test
+      - run:
+          name: stop-docker
+          command: docker-compose -f docker-compose-mysql-binlog-kafka.yml down -v

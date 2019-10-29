@@ -2,14 +2,14 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const KafkaAggregateSubscriptions = require('../lib/kafka/KafkaAggregateSubscriptions');
+const MessageConsumer = require('../lib/kafka/MessageConsumer');
 const IdGenerator = require('../lib/IdGenerator');
 const KafkaProducer = require('../lib/kafka/KafkaProducer');
 const MessageProducer = require('../lib/MessageProducer');
 
 chai.use(chaiAsPromised);
 
-const kafkaAggregateSubscriptions = new KafkaAggregateSubscriptions();
+const messageConsumer = new MessageConsumer();
 const kafkaProducer = new KafkaProducer();
 const idGenerator = new IdGenerator();
 const messageProducer = new MessageProducer();
@@ -25,24 +25,32 @@ before(async () => {
 
 after(async () => {
   await Promise.all([
-    kafkaAggregateSubscriptions.unsubscribe(),
+    messageConsumer.disconnect(),
     kafkaProducer.disconnect()
   ]);
 });
 
-describe('KafkaAggregateSubscriptions', function () {
+describe('MessageConsumer', function () {
   this.timeout(timeout);
 
-  it('should receive Kafka message', async () => {
-    const groupId = 'test-sb-id';
-    return new Promise(async (resolve, reject) => {
-      try {
-        kafkaAggregateSubscriptions.on('message', (message) => {
-          console.log('on message', message);
-          resolve();
-        });
+  it('should ensureTopicExistsBeforeSubscribing()', async () => {
+    const result = await messageConsumer.ensureTopicExistsBeforeSubscribing({ topics: [ topic ]});
+    helpers.expectEnsureTopicExists(result);
+  });
 
-        await kafkaAggregateSubscriptions.subscribe({ groupId, topics: [ topic ] });
+  it('should receive Kafka message', async () => {
+    const subscriberId = 'test-sb-id';
+    return new Promise(async (resolve, reject) => {
+      const messageHandler = (message) => {
+        console.log('messageHandler');
+        console.log(message);
+        // TODO: expect message
+        resolve();
+        return Promise.resolve(message);
+      };
+
+      try {
+        await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
 
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().getTime();
@@ -63,4 +71,3 @@ describe('KafkaAggregateSubscriptions', function () {
     });
   });
 });
-

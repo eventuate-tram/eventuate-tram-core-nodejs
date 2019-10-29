@@ -22,7 +22,7 @@ describe('insertIntoMessageTable()', () => {
     const creationTime = new Date().getTime();
     await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType);
     const message = await getMessageById(messageId);
-    helpers.expectMessage(message, messageId, topic, payload);
+    helpers.expectDbMessage(message, messageId, topic, payload);
   });
 
   it('should insert message within transaction', async () => {
@@ -32,7 +32,7 @@ describe('insertIntoMessageTable()', () => {
     await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
     await trx.commit();
     const message = await getMessageById(messageId);
-    helpers.expectMessage(message, messageId, topic, payload);
+    helpers.expectDbMessage(message, messageId, topic, payload);
   });
 
   it('should not insert message if transaction canceled', async () => {
