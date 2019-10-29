@@ -1,8 +1,10 @@
 const { expect } = require('chai');
 const { insertIntoMessageTable } = require('../../lib/mysql/eventuateCommonDbOperations');
+const MessageProducer = require('../../lib/MessageProducer');
 const IdGenerator = require('../../lib/IdGenerator');
 
 const idGenerator = new IdGenerator();
+const messageProducer = new MessageProducer();
 
 const expectEnsureTopicExists = (res) => {
   expect(res).to.be.an('Array');
@@ -123,6 +125,22 @@ const expectMessageForDomainEvent = (message, payload) => {
   expectMessageHeaders(message.headers);
 };
 
+const fakeKafkaMessage = async (topic, eventAggregateType, eventType, payload) => {
+  const timestamp = new Date().toUTCString();
+  const messageId = await idGenerator.genIdInternal();
+  const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: 0, eventAggregateType, eventType });
+  return JSON.stringify({
+    payload: payload || 'Fake message',
+    headers,
+    offset: 5,
+    partition: 0,
+    highWaterOffset: 6,
+    key: '0',
+    timestamp,
+    swimlane: 0
+  })
+};
+
 module.exports = {
   expectEnsureTopicExists,
   putMessage,
@@ -131,5 +149,6 @@ module.exports = {
   expectDbMessage,
   expectMessageHeaders,
   expectKafkaMessage,
-  expectMessageForDomainEvent
+  expectMessageForDomainEvent,
+  fakeKafkaMessage
 };
