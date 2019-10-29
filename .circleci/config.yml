@@ -30,7 +30,7 @@ jobs:
           command: |
             . ./.circleci/setenv-circle-ci.sh
             docker-compose -f docker-compose-mysql-binlog-kafka.yml up -d
-            sleep 30
+            while ! nc -z $DOCKER_HOST_IP 9092 ; do sleep 1 ; done
       - run: # run tests
           name: test
           command:  |
