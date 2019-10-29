@@ -1,8 +1,7 @@
 version:               2
 jobs:
   build:
-    docker:
-      - image: circleci/node:10.16.3-stretch-browsers
+    machine: true
     working_directory: ~/eventuate-tram-core-nodejs
     steps:
       - checkout
