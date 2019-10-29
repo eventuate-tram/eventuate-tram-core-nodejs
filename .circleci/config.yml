@@ -15,7 +15,7 @@ jobs:
       - run:
           name: Install node@v8.11.3
           command: |
-            ./load-nvm.sh
+            ./.circleci/load-nvm.sh
             nvm install v8.11.3
             nvm alias default v8.11.3
       - run:
@@ -26,7 +26,7 @@ jobs:
       - run: # run tests
           name: test
           command:  |
-            ./load-nvm.sh
+            ./.circleci/load-nvm.sh
             . ./.circleci/setenv-circle-ci.sh
             npm test
       - run:
