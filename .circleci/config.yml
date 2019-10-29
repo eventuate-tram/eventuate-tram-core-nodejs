@@ -28,7 +28,7 @@ jobs:
       - run:
           name: start-docker
           command: |
-            . ./setenv-circle-ci.sh
+            . ./.circleci/setenv-circle-ci.sh
             docker-compose -f docker-compose-mysql-binlog-kafka.yml up -d
       - run: # run tests
           name: test
