@@ -12,7 +12,7 @@ jobs:
           key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
-     - run:
+      - run:
           name: Install node@v8.11.3
           command: |
             ./load-nvm.sh
