@@ -5,11 +5,17 @@ jobs:
     working_directory: ~/eventuate-tram-core-nodejs
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - eventuate-tram-core-nodejs-{{ checksum "package-lock.json" }}
+            - eventuate-tram-core-nodejs-
+          paths:
+            - ./node_modules
       - run:
           name: install-npm-wee
           command: npm install
       - save_cache: # special step to save the dependency cache
-          key: dependency-cache-{{ checksum "package-lock.json" }}
+          key: eventuate-tram-core-nodejs-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
       - run:
