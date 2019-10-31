@@ -26,7 +26,7 @@ describe('ObservableQueue', () => {
     const messageHandlers = {
       [topic]: (message) => {
         result += message.val;
-        return Promise.resolve(message);
+        return Promise.resolve();
       }
     };
 

@@ -46,7 +46,7 @@ describe('MessageConsumer', function () {
         console.log(message);
         // TODO: expect message
         resolve();
-        return Promise.resolve(message);
+        return Promise.resolve();
       };
 
       try {

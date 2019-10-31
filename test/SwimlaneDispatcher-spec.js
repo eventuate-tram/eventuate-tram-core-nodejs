@@ -39,7 +39,7 @@ describe('SwimlaneDispatcher', function () {
       const messageHandlers = {
         [topic]: (message) => {
           console.log('Processing queue message:', message);
-          return Promise.resolve(message)
+          return Promise.resolve()
             .then(() => {
               console.log('--------------------------------');
               console.log('DISPATCHED');
