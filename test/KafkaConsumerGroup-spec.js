@@ -2,14 +2,14 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const KafkaAggregateSubscriptions = require('../lib/kafka/KafkaAggregateSubscriptions');
+const KafkaConsumerGroup = require('../lib/kafka/KafkaConsumerGroup');
 const IdGenerator = require('../lib/IdGenerator');
 const KafkaProducer = require('../lib/kafka/KafkaProducer');
 const MessageProducer = require('../lib/MessageProducer');
 
 chai.use(chaiAsPromised);
 
-const kafkaAggregateSubscriptions = new KafkaAggregateSubscriptions();
+const kafkaConsumerGroup = new KafkaConsumerGroup();
 const kafkaProducer = new KafkaProducer();
 const idGenerator = new IdGenerator();
 const messageProducer = new MessageProducer();
@@ -25,24 +25,24 @@ before(async () => {
 
 after(async () => {
   await Promise.all([
-    kafkaAggregateSubscriptions.unsubscribe(),
+    kafkaConsumerGroup.unsubscribe(),
     kafkaProducer.disconnect()
   ]);
 });
 
-describe('KafkaAggregateSubscriptions', function () {
+describe('KafkaConsumerGroup', function () {
   this.timeout(timeout);
 
   it('should receive Kafka message', async () => {
     const groupId = 'test-sb-id';
     return new Promise(async (resolve, reject) => {
       try {
-        kafkaAggregateSubscriptions.on('message', (message) => {
+        kafkaConsumerGroup.on('message', (message) => {
           console.log('on message', message);
           resolve();
         });
 
-        await kafkaAggregateSubscriptions.subscribe({ groupId, topics: [ topic ] });
+        await kafkaConsumerGroup.subscribe({ groupId, topics: [ topic ] });
 
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().getTime();
