@@ -125,21 +125,22 @@ const expectMessageForDomainEvent = (message, payload) => {
   expectMessageHeaders(message.headers);
 };
 
-const fakeKafkaMessage = async (topic, eventAggregateType, eventType, payload) => {
+const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partition = 0, payload }) => {
   const timestamp = new Date().toUTCString();
   const messageId = await idGenerator.genIdInternal();
   const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: 0, eventAggregateType, eventType });
-  return JSON.stringify({
+  return {
     payload: payload || 'Fake message',
     headers,
     offset: 5,
-    partition: 0,
+    partition,
     highWaterOffset: 6,
     key: '0',
-    timestamp,
-    swimlane: 0
-  })
+    timestamp
+  };
 };
+
+const sleep = timeout => new Promise((resolve, reject) => setTimeout(() => resolve(), timeout));
 
 module.exports = {
   expectEnsureTopicExists,
@@ -150,5 +151,6 @@ module.exports = {
   expectMessageHeaders,
   expectKafkaMessage,
   expectMessageForDomainEvent,
-  fakeKafkaMessage
+  fakeKafkaMessage,
+  sleep
 };

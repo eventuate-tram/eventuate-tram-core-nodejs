@@ -15,11 +15,9 @@ const timeout = 20000;
 const topic = 'test-topic';
 const eventAggregateType = 'Account';
 const eventType = 'charge';
-const expectedProcessedMessagesNum = 4;
+const expectedProcessedMessagesNum = 9;
 
-before(async () => {
-  await kafkaProducer.connect();
-});
+before(async () => await kafkaProducer.connect());
 
 after(async () => {
   await Promise.all([
@@ -36,9 +34,15 @@ describe('SwimlaneDispatcher', function () {
 
     return new Promise(async (resolve, reject) => {
       let processedNum = 0;
+      const messagesBySwimlane = {
+        0: [ 100, 5, 10 ],
+        // 1: [ 5, 10, 100 ]
+      };
+
       const messageHandlers = {
         [topic]: (message) => {
           console.log('Processing queue message:', message);
+
           return Promise.resolve()
             .then(() => {
               console.log('--------------------------------');
@@ -52,16 +56,24 @@ describe('SwimlaneDispatcher', function () {
       };
 
       const swimlaneDispatcher = new SwimlaneDispatcher({ messageHandlers });
-      const messageHandler = (message) => swimlaneDispatcher.dispatch(message);
+      const messageHandler = (message) => {
+        swimlaneDispatcher.dispatch(message);
+      };
 
       try {
         await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
 
-        const messages = await Promise.all(Array.from(new Array(expectedProcessedMessagesNum))
-          .map(() => helpers.fakeKafkaMessage(topic, eventAggregateType, eventType,
-            JSON.stringify({ message: 'Test kafka subscription' })))
+        const messages = await Promise.all(
+          Object.keys(messagesBySwimlane)
+          .reduce((acc, swimlane) => {
+            messagesBySwimlane[swimlane].forEach((m) => {
+              acc.push(helpers.fakeKafkaMessage({ topic, eventAggregateType, eventType, partition: swimlane, payload: m }));
+            });
+            return acc;
+          }, [])
         );
-        messages.forEach(message => kafkaProducer.send(topic, message));
+        console.log('messages:', messages);
+        // messages.forEach(message => kafkaProducer.send(topic, message, message.partition));
       } catch (err) {
         reject(err);
       }
