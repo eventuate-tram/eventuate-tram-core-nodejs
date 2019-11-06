@@ -53,8 +53,8 @@ describe('MessageConsumer', function () {
         await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
 
         const messageId = await idGenerator.genIdInternal();
-        const creationTime = new Date().getTime();
-        const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: 0, eventAggregateType, eventType });
+        const creationTime = new Date().toUTCString();
+        const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: 0, eventAggregateType, eventType, creationTime });
         const message = JSON.stringify({
             payload: JSON.stringify({ message: 'Test kafka subscription' }),
             headers,
@@ -62,7 +62,7 @@ describe('MessageConsumer', function () {
             partition: 0,
             highWaterOffset: 6,
             key: '0',
-            timestamp: new Date(creationTime).toUTCString()
+            timestamp: creationTime
           });
         kafkaProducer.send(topic, message);
       } catch (err) {

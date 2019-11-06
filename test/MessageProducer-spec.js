@@ -21,7 +21,8 @@ describe('MessageProducer', function () {
   describe('prepareMessageHeaders()', () => {
     it('should return correct headers', async () => {
       const messageId = await idGenerator.genIdInternal();
-      const headersData = {id: messageId, partitionId: 0, eventAggregateType, eventType};
+      const creationTime = new Date().toUTCString();
+      const headersData = { id: messageId, partitionId: 0, eventAggregateType, eventType, creationTime };
       const headers = messageProducer.prepareMessageHeaders(topic, headersData);
       helpers.expectMessageHeaders(headers, Object.assign(headersData, {destination: topic}));
     });

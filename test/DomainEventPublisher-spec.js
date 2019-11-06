@@ -18,7 +18,7 @@ const aggregateId = 'Fake_aggregate_id';
 const eventType = 'charge';
 const event = { amount: 100 };
 const topic = 'test-domain-event-publisher';
-const creationTime = new Date().getTime();
+const creationTime = new Date().toUTCString();
 
 let headers;
 

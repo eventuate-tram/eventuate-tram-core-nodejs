@@ -126,9 +126,9 @@ const expectMessageForDomainEvent = (message, payload) => {
 };
 
 const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partition = 0, payload }) => {
-  const timestamp = new Date().toUTCString();
+  const creationTime = new Date().toUTCString();
   const messageId = await idGenerator.genIdInternal();
-  const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: 0, eventAggregateType, eventType });
+  const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: partition, eventAggregateType, eventType, creationTime });
   return {
     payload: payload || 'Fake message',
     headers,
@@ -136,7 +136,7 @@ const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partitio
     partition,
     highWaterOffset: 6,
     key: '0',
-    timestamp
+    timestamp: creationTime
   };
 };
 
