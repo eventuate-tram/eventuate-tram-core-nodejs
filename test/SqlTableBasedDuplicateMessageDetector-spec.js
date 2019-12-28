@@ -3,18 +3,32 @@ const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
 const knex = require('../lib/mysql/knex');
+const IdGenerator = require('../lib/IdGenerator');
+
 const SqlTableBasedDuplicateMessageDetector = require('../lib/SqlTableBasedDuplicateMessageDetector');
+const idGenerator = new IdGenerator();
 
 describe('SqlTableBasedDuplicateMessageDetector', async () => {
-  it('isDuplicate() should return false', async () => {
-    const transaction = knex.transaction;
+
+  describe('isDuplicate()', () => {
+    let messageId;
+
     const consumerId = 'test-sqlTableBasedDuplicateMessageDetector';
-    const messageId = '0000016f392561b5-1667497984000000';
     const currentTimeInMillisecondsSql = new Date().getTime();
-    const sqlTableBasedDuplicateMessageDetector = new SqlTableBasedDuplicateMessageDetector(currentTimeInMillisecondsSql, transaction);
+    const sqlTableBasedDuplicateMessageDetector = new SqlTableBasedDuplicateMessageDetector(currentTimeInMillisecondsSql);
 
-    const isDuplicate = await sqlTableBasedDuplicateMessageDetector.isDuplicate(consumerId, messageId);
+    before(async () => {
+      messageId =  await idGenerator.genIdInternal();
+    });
 
-    expect(isDuplicate).to.be.false;
+    it('should return true for the same message', async () => {
+      const isDuplicate = await sqlTableBasedDuplicateMessageDetector.isDuplicate(consumerId, messageId);
+      expect(isDuplicate).to.be.false;
+    });
+
+    it('isDuplicate() should return false', async () => {
+      const isDuplicate = await sqlTableBasedDuplicateMessageDetector.isDuplicate(consumerId, messageId);
+      expect(isDuplicate).to.be.true;
+    });
   });
 });

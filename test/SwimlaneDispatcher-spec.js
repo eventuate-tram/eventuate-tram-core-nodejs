@@ -14,7 +14,7 @@ const messageConsumer = new MessageConsumer();
 const kafkaProducer = new KafkaProducer();
 
 const timeout = 25000;
-const topic = 'test-topic';
+const topic = 'test-topic-swimlane-dispatcher';
 const eventAggregateType = 'Account';
 const eventType = 'charge';
 const expectedProcessedMessagesNum = 6;
@@ -56,6 +56,8 @@ describe('SwimlaneDispatcher', function () {
 
               processedNum++;
               if (processedNum >= expectedProcessedMessagesNum) {
+                console.log('resultsBySwimlane', resultsBySwimlane);
+                console.log('messagesBySwimlane', messagesBySwimlane);
                 expect(resultsBySwimlane).to.deep.eq(messagesBySwimlane);
                 resolve();
               }
