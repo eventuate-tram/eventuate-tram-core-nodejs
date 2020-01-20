@@ -6,6 +6,7 @@ const MessageConsumer = require('../lib/kafka/MessageConsumer');
 const IdGenerator = require('../lib/IdGenerator');
 const KafkaProducer = require('../lib/kafka/KafkaProducer');
 const MessageProducer = require('../lib/MessageProducer');
+const messageHandlerDecorator = require('../lib/messageHandlerDecorator');
 
 chai.use(chaiAsPromised);
 
@@ -50,11 +51,13 @@ describe('MessageConsumer', function () {
       };
 
       try {
-        await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
+        const decoratedMessageHandler = messageHandlerDecorator(messageHandler, subscriberId);
+
+        await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler: decoratedMessageHandler });
 
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().toUTCString();
-        kafkaProducer.send(topic, makeMessage(messageId, creationTime));
+        await kafkaProducer.send(topic, makeMessage(messageId, creationTime));
       } catch (err) {
         reject(err);
       }
