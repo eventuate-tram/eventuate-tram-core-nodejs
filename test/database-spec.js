@@ -20,7 +20,7 @@ describe('insertIntoMessageTable()', () => {
   it('should insert message', async () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().toUTCString();
-    await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType);
+    await messageProducer._send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType);
     const message = await getMessageById(messageId);
     helpers.expectDbMessage(message, messageId, topic, payload);
   });
@@ -29,7 +29,7 @@ describe('insertIntoMessageTable()', () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().toUTCString();
     const trx = await knex.transaction();
-    await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
+    await messageProducer._send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
     await trx.commit();
     const message = await getMessageById(messageId);
     helpers.expectDbMessage(message, messageId, topic, payload);
@@ -39,7 +39,7 @@ describe('insertIntoMessageTable()', () => {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().toUTCString();
     const trx = await knex.transaction();
-    await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
+    await messageProducer._send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
     await trx.rollback();
     const message = await getMessageById(messageId);
     expect(message).to.be.undefined;

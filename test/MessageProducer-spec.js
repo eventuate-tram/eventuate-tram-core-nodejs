@@ -23,7 +23,7 @@ describe('MessageProducer', function () {
       const messageId = await idGenerator.genIdInternal();
       const creationTime = new Date().toUTCString();
       const headersData = { id: messageId, partitionId: 0, eventAggregateType, eventType, creationTime };
-      const headers = messageProducer.prepareMessageHeaders(topic, headersData);
+      const headers = messageProducer._prepareMessageHeaders(topic, headersData);
       helpers.expectMessageHeaders(headers, Object.assign(headersData, {destination: topic}));
     });
   });
@@ -32,6 +32,6 @@ describe('MessageProducer', function () {
     const messageId = await idGenerator.genIdInternal();
     const creationTime = new Date().getTime();
     const payload = { message: 'Test kafka subscription' };
-    await messageProducer.send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType);
+    await messageProducer._send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType);
   });
 });

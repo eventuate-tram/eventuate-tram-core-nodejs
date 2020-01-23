@@ -2,9 +2,11 @@ const { expect } = require('chai');
 const { insertIntoMessageTable } = require('../../lib/mysql/eventuateCommonDbOperations');
 const MessageProducer = require('../../lib/MessageProducer');
 const IdGenerator = require('../../lib/IdGenerator');
+const DefaultChannelMapping = require('../../lib/DefaultChannelMapping');
 
 const idGenerator = new IdGenerator();
-const messageProducer = new MessageProducer();
+const channelMapping = new DefaultChannelMapping(new Map());
+const messageProducer = new MessageProducer({ channelMapping });
 
 const expectEnsureTopicExists = (res) => {
   expect(res).to.be.an('Array');
@@ -113,7 +115,7 @@ const expectKafkaMessage = (message) => {
   }
 };
 
-const expectMessageForDomainEvent = (message, payload) => {
+const expectMessageForDomainEvent = (message, payload, ) => {
   expect(message).to.haveOwnProperty('payload');
   expect(message.payload).to.be.a('String');
   if (typeof (payload === 'object')) {
@@ -122,13 +124,23 @@ const expectMessageForDomainEvent = (message, payload) => {
   expect(message.payload).eq(payload);
 
   expect(message).to.haveOwnProperty('headers');
-  expectMessageHeaders(message.headers);
+
+  const headers = message.headers;
+
+  expect(headers).to.haveOwnProperty('PARTITION_ID');
+  expect(headers.PARTITION_ID).to.be.a('String');
+
+  expect(headers).to.haveOwnProperty('event-aggregate-type');
+  expect(headers['event-aggregate-type']).to.be.a('String');
+
+  expect(headers).to.haveOwnProperty('event-type');
+  expect(headers['event-type']).to.be.a('String');
 };
 
 const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partition = 0, payload }) => {
   const creationTime = new Date().getTime();
   const messageId = await idGenerator.genIdInternal();
-  const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: partition, eventAggregateType, eventType, creationTime });
+  const headers = messageProducer._prepareMessageHeaders(topic, { id: messageId, partitionId: partition, eventAggregateType, eventType, creationTime });
   return {
     payload: payload || 'Fake message',
     headers,

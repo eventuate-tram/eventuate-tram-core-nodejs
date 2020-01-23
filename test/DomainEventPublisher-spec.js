@@ -5,38 +5,51 @@ const helpers = require('./lib/helpers');
 const DomainEventPublisher = require('../lib/DomainEventPublisher');
 const IdGenerator = require('../lib/IdGenerator');
 const MessageProducer = require('../lib/MessageProducer');
+const { EVENT_DATA, EVENT_TYPE } = require('../lib/eventMessageHeaders');
+const DefaultChannelMapping = require('../lib/DefaultChannelMapping');
+const KafkaConsumerGroup = require('../lib/kafka/KafkaConsumerGroup');
 
 chai.use(chaiAsPromised);
 
-
-const messageProducer = new MessageProducer();
+const channelMapping = new DefaultChannelMapping(new Map());
+const messageProducer = new MessageProducer({ channelMapping });
 const idGenerator = new IdGenerator();
 const domainEventPublisher = new DomainEventPublisher({ messageProducer });
+const kafkaConsumerGroup = new KafkaConsumerGroup();
 
 const aggregateType = 'Account';
 const aggregateId = 'Fake_aggregate_id';
 const eventType = 'charge';
-const event = { amount: 100 };
-const topic = 'test-domain-event-publisher';
+const event = { [EVENT_DATA]: { amount: 100 }, [EVENT_TYPE]: 'charge' };
+const groupId = 'test-domain-event-publisher-kcg-id';
 const creationTime = new Date().toUTCString();
+const timeout = 20000;
 
-let headers;
+let extraHeaders = {};
 
-before(async () => {
-  const messageId = await idGenerator.genIdInternal();
-  headers = messageProducer.prepareMessageHeaders(topic, {
-    id: messageId, partitionId: 0, creationTime, eventAggregateType: aggregateType, eventType
-  });
+after(async () => {
+  await kafkaConsumerGroup.unsubscribe();
 });
 
-describe('DomainEventPublisher', () => {
+describe('DomainEventPublisher', function () {
+  this.timeout(timeout);
+
   it('makeMessageForDomainEvent() should return a correct message', () => {
-    const messageForDomainEvent = domainEventPublisher.makeMessageForDomainEvent(aggregateType, aggregateId, headers, event, eventType);
+    const messageForDomainEvent = domainEventPublisher.makeMessageForDomainEvent(aggregateType, aggregateId, extraHeaders, event, eventType);
     console.log('messageForDomainEvent:', messageForDomainEvent);
     helpers.expectMessageForDomainEvent(messageForDomainEvent, event);
   });
 
   it('should publish a message', async () => {
-    await domainEventPublisher.publish(aggregateType, aggregateId, headers, [ event ]);
+    return new Promise(async (resolve) => {
+      kafkaConsumerGroup.on('message', (message) => {
+        console.log('on message', message);
+        resolve();
+      });
+
+      await kafkaConsumerGroup.subscribe({ groupId, topics: [ aggregateType ] });
+
+      await domainEventPublisher.publish(aggregateType, aggregateId, extraHeaders, [ event ]);
+    });
   });
 });
