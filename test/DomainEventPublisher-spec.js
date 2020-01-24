@@ -3,7 +3,6 @@ const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
 const DomainEventPublisher = require('../lib/DomainEventPublisher');
-const IdGenerator = require('../lib/IdGenerator');
 const MessageProducer = require('../lib/MessageProducer');
 const { EVENT_DATA, EVENT_TYPE } = require('../lib/eventMessageHeaders');
 const DefaultChannelMapping = require('../lib/DefaultChannelMapping');
@@ -13,7 +12,6 @@ chai.use(chaiAsPromised);
 
 const channelMapping = new DefaultChannelMapping(new Map());
 const messageProducer = new MessageProducer({ channelMapping });
-const idGenerator = new IdGenerator();
 const domainEventPublisher = new DomainEventPublisher({ messageProducer });
 const kafkaConsumerGroup = new KafkaConsumerGroup();
 
@@ -22,7 +20,6 @@ const aggregateId = 'Fake_aggregate_id';
 const eventType = 'charge';
 const event = { [EVENT_DATA]: { amount: 100 }, [EVENT_TYPE]: 'charge' };
 const groupId = 'test-domain-event-publisher-kcg-id';
-const creationTime = new Date().toUTCString();
 const timeout = 20000;
 
 let extraHeaders = {};

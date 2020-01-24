@@ -14,34 +14,35 @@ const messageProducer = new MessageProducer();
 const topic = 'Database-test-topic';
 const payload = '{"text": "test database"}';
 const eventAggregateType = 'Account';
+const eventAggregateId = 'Fake_aggregate_id';
 const eventType = 'charge';
 
 describe('insertIntoMessageTable()', () => {
   it('should insert message', async () => {
     const messageId = await idGenerator.genIdInternal();
-    const creationTime = new Date().toUTCString();
-    await messageProducer._send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType);
-    const message = await getMessageById(messageId);
-    helpers.expectDbMessage(message, messageId, topic, payload);
+    const message = { payload, headers: { ID: messageId, PARTITION_ID: 0, DATE: new Date().getTime(), 'event-aggregate-id': eventAggregateId, 'event-aggregate-type': eventAggregateType, 'event-type': eventType }};
+    await messageProducer.send(topic, message);
+    const sentMessage = await getMessageById(messageId);
+    helpers.expectDbMessage(sentMessage, messageId, topic, payload);
   });
 
   it('should insert message within transaction', async () => {
     const messageId = await idGenerator.genIdInternal();
-    const creationTime = new Date().toUTCString();
     const trx = await knex.transaction();
-    await messageProducer._send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
+    const message = { payload, headers: { ID: messageId, PARTITION_ID: 0, DATE: new Date().getTime(), 'event-aggregate-id': eventAggregateId, 'event-aggregate-type': eventAggregateType, 'event-type': eventType }};
+    await messageProducer.send(topic, message, trx);
     await trx.commit();
-    const message = await getMessageById(messageId);
-    helpers.expectDbMessage(message, messageId, topic, payload);
+    const sentMessage = await getMessageById(messageId);
+    helpers.expectDbMessage(sentMessage, messageId, topic, payload);
   });
 
   it('should not insert message if transaction canceled', async () => {
     const messageId = await idGenerator.genIdInternal();
-    const creationTime = new Date().toUTCString();
     const trx = await knex.transaction();
-    await messageProducer._send(messageId, topic, payload, creationTime, 0, eventAggregateType, eventType, trx);
+    const message = { payload, headers: { ID: messageId, PARTITION_ID: 0, DATE: new Date().getTime(), 'event-aggregate-id': eventAggregateId, 'event-aggregate-type': eventAggregateType, 'event-type': eventType }};
+    await messageProducer.send(topic, message, trx);
     await trx.rollback();
-    const message = await getMessageById(messageId);
-    expect(message).to.be.undefined;
+    const sentMessage = await getMessageById(messageId);
+    expect(sentMessage).to.be.undefined;
   });
 });

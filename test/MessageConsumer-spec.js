@@ -63,7 +63,7 @@ describe('MessageConsumer', function () {
 });
 
 function makeMessage(messageId, creationTime) {
-   const headers = messageProducer._prepareMessageHeaders(topic, { id: messageId, partitionId: 0, eventAggregateType, eventType, creationTime });
+   const headers = messageProducer.prepareMessageHeaders(topic, { headers: { ID: messageId, PARTITION_ID: 0, 'event-aggregate-type': eventAggregateType, 'event-type': eventType, DATE: creationTime }});
   return JSON.stringify({
     payload: JSON.stringify({ message: 'Test kafka subscription' }),
     headers,

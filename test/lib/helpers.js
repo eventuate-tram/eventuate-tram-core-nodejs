@@ -71,7 +71,7 @@ const expectMessageHeaders = (headers, headersData) => {
   expect(headers.DESTINATION).to.be.a('String');
 
   expect(headers).to.haveOwnProperty('DATE');
-  expect(headers.DATE).to.be.a('String');
+  expect(headers.DATE).to.be.a('Number');
 
   expect(headers).to.haveOwnProperty('event-aggregate-type');
   expect(headers['event-aggregate-type']).to.be.a('String');
@@ -80,11 +80,11 @@ const expectMessageHeaders = (headers, headersData) => {
   expect(headers['event-type']).to.be.a('String');
 
   if (headersData) {
-    expect(headers.ID).eq(headersData.id);
-    expect(headers.DATE).eq(new Date(headersData.creationTime).toUTCString());
-    expect(headers['event-aggregate-type']).eq(headersData.eventAggregateType);
-    expect(headers.PARTITION_ID).eq(headersData.partitionId.toString());
-    expect(headers['event-type']).eq(headersData.eventType);
+    expect(headers.ID).eq(headersData.ID);
+    expect(headers.DATE).eq(headersData.DATE);
+    expect(headers['event-aggregate-type']).eq(headersData['event-aggregate-type']);
+    expect(headers.PARTITION_ID).eq(headersData.PARTITION_ID.toString());
+    expect(headers['event-type']).eq(headersData['event-type']);
     expect(headers.DESTINATION).eq(headersData.destination);
   }
 };
@@ -140,7 +140,7 @@ const expectMessageForDomainEvent = (message, payload, ) => {
 const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partition = 0, payload }) => {
   const creationTime = new Date().getTime();
   const messageId = await idGenerator.genIdInternal();
-  const headers = messageProducer._prepareMessageHeaders(topic, { id: messageId, partitionId: partition, eventAggregateType, eventType, creationTime });
+  const headers = messageProducer.prepareMessageHeaders(topic, { headers: { ID: messageId, PARTITION_ID: partition, 'event-aggregate-type': eventAggregateType, 'event-type': eventType, DATE: creationTime }});
   return {
     payload: payload || 'Fake message',
     headers,
