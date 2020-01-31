@@ -30,7 +30,7 @@ after(async () => {
 
 const messagesBySwimlane = {
   0: [ 100, 5, 10 ],
-  1: [ 5, 10, 100 ]
+  1: [ 14, 6, 103 ]
 };
 
 const resultsBySwimlane = { 0: [], 1: [] };
@@ -47,10 +47,8 @@ describe('SwimlaneDispatcher', function () {
       let processedNum = 0;
 
       const messageHandlers = {
-        [topic]: (message) => {
+        [topic]: async (message) => {
           console.log('Processing queue message:', message);
-          return Promise.resolve()
-            .then(async () => {
               await randomSleep();
               pushMessageToResults(message);
 
@@ -61,17 +59,18 @@ describe('SwimlaneDispatcher', function () {
                 expect(resultsBySwimlane).to.deep.eq(messagesBySwimlane);
                 resolve();
               }
-            });
         }
       };
 
       swimlaneDispatcher = new SwimlaneDispatcher({ messageHandlers });
-      const messageHandler = (message) => swimlaneDispatcher.dispatch(message);
+      const messageHandler = (message) => {
+        return swimlaneDispatcher.dispatch(message);
+      };
 
       try {
         await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
         const messages = await generateMessages();
-        sendMessages(messages);
+        await sendMessages(messages);
       } catch (err) {
         reject(err);
       }
@@ -101,15 +100,27 @@ async function randomSleep() {
 }
 
 function generateMessages() {
-  return Promise.all(
-    Object.keys(messagesBySwimlane)
-      .reduce((acc, swimlane) => {
-        messagesBySwimlane[swimlane].forEach((m) => acc.push(helpers.fakeKafkaMessage({ topic, eventAggregateType, eventType, partition: swimlane, payload: m })));
-        return acc;
-      }, [])
-  );
+  const promises = [];
+  Object.keys(messagesBySwimlane)
+    .forEach((swimlane) => {
+      messagesBySwimlane[swimlane].forEach((payload) => {
+        const fakeMessagePromise = helpers.fakeKafkaMessage({
+          topic,
+          eventAggregateType,
+          eventType,
+          partition: swimlane,
+          payload
+        });
+        promises.push(fakeMessagePromise)
+      });
+    });
+  return Promise.all(promises);
 }
 
 function sendMessages(messages) {
-  messages.forEach(message => kafkaProducer.send(topic, message, message.partition));
+  const promises = [];
+  messages.forEach(message => {
+    promises.push(kafkaProducer.send(topic, message, message.partition));
+  });
+  return Promise.all(promises);
 }

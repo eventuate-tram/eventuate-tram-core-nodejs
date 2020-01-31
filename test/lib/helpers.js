@@ -3,6 +3,7 @@ const { insertIntoMessageTable } = require('../../lib/mysql/eventuateCommonDbOpe
 const MessageProducer = require('../../lib/MessageProducer');
 const IdGenerator = require('../../lib/IdGenerator');
 const DefaultChannelMapping = require('../../lib/DefaultChannelMapping');
+const { AGGREGATE_TYPE, EVENT_TYPE, AGGREGATE_ID } = require('../../lib/eventMessageHeaders');
 
 const idGenerator = new IdGenerator();
 const channelMapping = new DefaultChannelMapping(new Map());
@@ -73,18 +74,18 @@ const expectMessageHeaders = (headers, headersData) => {
   expect(headers).to.haveOwnProperty('DATE');
   expect(headers.DATE).to.be.a('Number');
 
-  expect(headers).to.haveOwnProperty('event-aggregate-type');
-  expect(headers['event-aggregate-type']).to.be.a('String');
+  expect(headers).to.haveOwnProperty('AGGREGATE_TYPE');
+  expect(headers['AGGREGATE_TYPE']).to.be.a('String');
 
-  expect(headers).to.haveOwnProperty('event-type');
-  expect(headers['event-type']).to.be.a('String');
+  expect(headers).to.haveOwnProperty('EVENT_TYPE');
+  expect(headers['EVENT_TYPE']).to.be.a('String');
 
   if (headersData) {
     expect(headers.ID).eq(headersData.ID);
     expect(headers.DATE).eq(headersData.DATE);
-    expect(headers['event-aggregate-type']).eq(headersData['event-aggregate-type']);
+    expect(headers.AGGREGATE_TYPE).eq(headersData[AGGREGATE_TYPE]);
     expect(headers.PARTITION_ID).eq(headersData.PARTITION_ID.toString());
-    expect(headers['event-type']).eq(headersData['event-type']);
+    expect(headers.EVENT_TYPE).eq(headersData[EVENT_TYPE]);
     expect(headers.DESTINATION).eq(headersData.destination);
   }
 };
@@ -139,8 +140,16 @@ const expectMessageForDomainEvent = (message, payload, ) => {
 
 const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partition = 0, payload }) => {
   const creationTime = new Date().getTime();
-  const messageId = await idGenerator.genIdInternal();
-  const headers = messageProducer.prepareMessageHeaders(topic, { headers: { ID: messageId, PARTITION_ID: partition, 'event-aggregate-type': eventAggregateType, 'event-type': eventType, DATE: creationTime }});
+
+  const headers = await messageProducer.prepareMessageHeaders(topic, {
+    headers: {
+      PARTITION_ID: partition,
+      [AGGREGATE_TYPE]: eventAggregateType,
+      [EVENT_TYPE]: eventType,
+      DATE: creationTime
+    }
+  });
+
   return {
     payload: payload || 'Fake message',
     headers,

@@ -24,7 +24,7 @@ describe('MessageProducer', function () {
       const messageId = await idGenerator.genIdInternal();
       const creationTime = new Date().getTime();
       const headersData = { ID: messageId, PARTITION_ID: 0, 'event-aggregate-type': eventAggregateType, 'event-type': eventType, DATE: creationTime };
-      const headers = messageProducer.prepareMessageHeaders(topic, { headers: headersData });
+      const headers = await messageProducer.prepareMessageHeaders(topic, { headers: headersData });
       helpers.expectMessageHeaders(headers, Object.assign(headersData, {destination: topic}));
     });
   });
