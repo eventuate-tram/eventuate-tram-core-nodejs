@@ -1,9 +1,11 @@
 const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
+const randomInt = require('random-int');
 const helpers = require('./lib/helpers');
 const MessageConsumer = require('../lib/kafka/MessageConsumer');
 const SwimlaneDispatcher = require('../lib/kafka/SwimlaneDispatcher');
+const ObservableQueue = require('../lib/ObservableQueue');
 const KafkaProducer = require('../lib/kafka/KafkaProducer');
 
 chai.use(chaiAsPromised);
@@ -11,15 +13,13 @@ chai.use(chaiAsPromised);
 const messageConsumer = new MessageConsumer();
 const kafkaProducer = new KafkaProducer();
 
-const timeout = 20000;
-const topic = 'test-topic';
+const timeout = 25000;
+const topic = 'test-topic-swimlane-dispatcher';
 const eventAggregateType = 'Account';
 const eventType = 'charge';
-const expectedProcessedMessagesNum = 4;
+const expectedProcessedMessagesNum = 6;
 
-before(async () => {
-  await kafkaProducer.connect();
-});
+before(async () => await kafkaProducer.connect());
 
 after(async () => {
   await Promise.all([
@@ -28,43 +28,99 @@ after(async () => {
   ]);
 });
 
+const messagesBySwimlane = {
+  0: [ 100, 5, 10 ],
+  1: [ 14, 6, 103 ]
+};
+
+const resultsBySwimlane = { 0: [], 1: [] };
+
 describe('SwimlaneDispatcher', function () {
   this.timeout(timeout);
 
+  let swimlaneDispatcher;
+
   it('should dispatch a message', async () => {
-    const subscriberId = 'test-sb-id';
+    const subscriberId = 'test-swimlane-dispatcher-id';
 
     return new Promise(async (resolve, reject) => {
       let processedNum = 0;
+
       const messageHandlers = {
-        [topic]: (message) => {
+        [topic]: async (message) => {
           console.log('Processing queue message:', message);
-          return Promise.resolve()
-            .then(() => {
-              console.log('--------------------------------');
-              console.log('DISPATCHED');
+              await randomSleep();
+              pushMessageToResults(message);
+
               processedNum++;
               if (processedNum >= expectedProcessedMessagesNum) {
+                console.log('resultsBySwimlane', resultsBySwimlane);
+                console.log('messagesBySwimlane', messagesBySwimlane);
+                expect(resultsBySwimlane).to.deep.eq(messagesBySwimlane);
                 resolve();
               }
-            });
         }
       };
 
-      const swimlaneDispatcher = new SwimlaneDispatcher({ messageHandlers });
-      const messageHandler = (message) => swimlaneDispatcher.dispatch(message);
+      swimlaneDispatcher = new SwimlaneDispatcher({ messageHandlers });
+      const messageHandler = (message) => {
+        return swimlaneDispatcher.dispatch(message);
+      };
 
       try {
         await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
-
-        const messages = await Promise.all(Array.from(new Array(expectedProcessedMessagesNum))
-          .map(() => helpers.fakeKafkaMessage(topic, eventAggregateType, eventType,
-            JSON.stringify({ message: 'Test kafka subscription' })))
-        );
-        messages.forEach(message => kafkaProducer.send(topic, message));
+        const messages = await generateMessages();
+        await sendMessages(messages);
       } catch (err) {
         reject(err);
       }
     });
   });
+
+  it('should have queues for each swimlane', () => {
+    expect(swimlaneDispatcher).to.be.ok;
+    expect(swimlaneDispatcher).to.haveOwnProperty('queues');
+    expect(swimlaneDispatcher.queues).to.haveOwnProperty(topic);
+    console.log('swimlaneDispatcher.queues:', swimlaneDispatcher.queues);
+    Object.keys(messagesBySwimlane).forEach((swimlane) => {
+      expect(swimlaneDispatcher.queues[topic]).to.haveOwnProperty(swimlane);
+      expect(swimlaneDispatcher.queues[topic][swimlane]).to.be.instanceOf(ObservableQueue);
+    });
+  });
 });
+
+function pushMessageToResults(message) {
+  resultsBySwimlane[message.partitionId].push(message.payload);
+}
+
+async function randomSleep() {
+  const timeout = randomInt(100, 1000);
+  console.log('sleep ' + timeout);
+  await helpers.sleep(timeout);
+}
+
+function generateMessages() {
+  const promises = [];
+  Object.keys(messagesBySwimlane)
+    .forEach((swimlane) => {
+      messagesBySwimlane[swimlane].forEach((payload) => {
+        const fakeMessagePromise = helpers.fakeKafkaMessage({
+          topic,
+          eventAggregateType,
+          eventType,
+          partition: swimlane,
+          payload
+        });
+        promises.push(fakeMessagePromise)
+      });
+    });
+  return Promise.all(promises);
+}
+
+function sendMessages(messages) {
+  const promises = [];
+  messages.forEach(message => {
+    promises.push(kafkaProducer.send(topic, message, message.partition));
+  });
+  return Promise.all(promises);
+}

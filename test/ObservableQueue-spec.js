@@ -1,4 +1,5 @@
 const chai = require('chai');
+const randomInt = require('random-int');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
@@ -8,7 +9,8 @@ const topic = 'topic1';
 const executor = {};
 const swimlane = 1;
 
-describe('ObservableQueue', () => {
+describe('ObservableQueue', function () {
+  this.timeout(10000);
 
   it('should throw an exception if no message handler for the topic', (done) => {
     const messageHandlers = {};
@@ -43,5 +45,33 @@ describe('ObservableQueue', () => {
     }));
 
     expect(result).eq(expectedResult);
+  });
+
+  it('verify messages processed sequentially', async () => {
+    const values = [ 100, 5, 20, 10, 6 ];
+    const results = [];
+
+    const messageHandlers = {
+      [topic]: async (message) => {
+          const timeout = randomInt(100, 1000);
+          console.log('sleep ' + timeout);
+          await helpers.sleep(timeout);
+          console.log('processed message:', message);
+          results.push(message.val);
+          Promise.resolve();
+      }
+    };
+
+    const queue = new ObservableQueue({ messageHandlers, topic, executor, swimlane});
+    const messages = values.map(val => ({ val, topic }));
+
+    await Promise.all(messages.map((message) => {
+      return new Promise((resolve, reject) => {
+        queue.queueMessage({ message, resolve, reject });
+      });
+    }));
+
+    expect(results.length).eq(values.length);
+    results.forEach((v, index) => expect(v).eq(values[index]));
   });
 });

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/IdGenerator-spec.js test/database-spec.js test/KafkaProducer-spec.js test/MessageProducer-spec.js test/MessageConsumer-spec.js test/ObservableQueue-spec.js test/SwimlaneDispatcher-spec.js"
+    "test": "mocha test/IdGenerator-spec.js test/database-spec.js test/SqlTableBasedDuplicateMessageDetector-spec.js test/KafkaProducer-spec.js test/MessageProducer-spec.js test/MessageConsumer-spec.js test/ObservableQueue-spec.js test/SwimlaneDispatcher-spec.js"
   },
   "repository": {
     "type": "git",
@@ -30,6 +30,7 @@
     "bluebird": "^3.5.5",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "mocha": "^6.2.0"
+    "mocha": "^6.2.0",
+    "random-int": "^2.0.1"
   }
 }

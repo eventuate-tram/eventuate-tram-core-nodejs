@@ -2,9 +2,12 @@ const { expect } = require('chai');
 const { insertIntoMessageTable } = require('../../lib/mysql/eventuateCommonDbOperations');
 const MessageProducer = require('../../lib/MessageProducer');
 const IdGenerator = require('../../lib/IdGenerator');
+const DefaultChannelMapping = require('../../lib/DefaultChannelMapping');
+const { AGGREGATE_TYPE, EVENT_TYPE, AGGREGATE_ID } = require('../../lib/eventMessageHeaders');
 
 const idGenerator = new IdGenerator();
-const messageProducer = new MessageProducer();
+const channelMapping = new DefaultChannelMapping(new Map());
+const messageProducer = new MessageProducer({ channelMapping });
 
 const expectEnsureTopicExists = (res) => {
   expect(res).to.be.an('Array');
@@ -69,20 +72,20 @@ const expectMessageHeaders = (headers, headersData) => {
   expect(headers.DESTINATION).to.be.a('String');
 
   expect(headers).to.haveOwnProperty('DATE');
-  expect(headers.DATE).to.be.a('String');
+  expect(headers.DATE).to.be.a('Number');
 
-  expect(headers).to.haveOwnProperty('event-aggregate-type');
-  expect(headers['event-aggregate-type']).to.be.a('String');
+  expect(headers).to.haveOwnProperty('AGGREGATE_TYPE');
+  expect(headers['AGGREGATE_TYPE']).to.be.a('String');
 
-  expect(headers).to.haveOwnProperty('event-type');
-  expect(headers['event-type']).to.be.a('String');
+  expect(headers).to.haveOwnProperty('EVENT_TYPE');
+  expect(headers['EVENT_TYPE']).to.be.a('String');
 
   if (headersData) {
-    expect(headers.ID).eq(headersData.id);
-    expect(headers.DATE).eq(new Date(headersData.creationTime).toUTCString());
-    expect(headers['event-aggregate-type']).eq(headersData.eventAggregateType);
-    expect(headers.PARTITION_ID).eq(headersData.partitionId.toString());
-    expect(headers['event-type']).eq(headersData.eventType);
+    expect(headers.ID).eq(headersData.ID);
+    expect(headers.DATE).eq(headersData.DATE);
+    expect(headers.AGGREGATE_TYPE).eq(headersData[AGGREGATE_TYPE]);
+    expect(headers.PARTITION_ID).eq(headersData.PARTITION_ID.toString());
+    expect(headers.EVENT_TYPE).eq(headersData[EVENT_TYPE]);
     expect(headers.DESTINATION).eq(headersData.destination);
   }
 };
@@ -113,7 +116,7 @@ const expectKafkaMessage = (message) => {
   }
 };
 
-const expectMessageForDomainEvent = (message, payload) => {
+const expectMessageForDomainEvent = (message, payload, ) => {
   expect(message).to.haveOwnProperty('payload');
   expect(message.payload).to.be.a('String');
   if (typeof (payload === 'object')) {
@@ -122,24 +125,43 @@ const expectMessageForDomainEvent = (message, payload) => {
   expect(message.payload).eq(payload);
 
   expect(message).to.haveOwnProperty('headers');
-  expectMessageHeaders(message.headers);
+
+  const headers = message.headers;
+
+  expect(headers).to.haveOwnProperty('PARTITION_ID');
+  expect(headers.PARTITION_ID).to.be.a('String');
+
+  expect(headers).to.haveOwnProperty('event-aggregate-type');
+  expect(headers['event-aggregate-type']).to.be.a('String');
+
+  expect(headers).to.haveOwnProperty('event-type');
+  expect(headers['event-type']).to.be.a('String');
 };
 
-const fakeKafkaMessage = async (topic, eventAggregateType, eventType, payload) => {
-  const timestamp = new Date().toUTCString();
-  const messageId = await idGenerator.genIdInternal();
-  const headers = messageProducer.prepareMessageHeaders(topic, { id: messageId, partitionId: 0, eventAggregateType, eventType });
-  return JSON.stringify({
+const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partition = 0, payload }) => {
+  const creationTime = new Date().getTime();
+
+  const headers = await messageProducer.prepareMessageHeaders(topic, {
+    headers: {
+      PARTITION_ID: partition,
+      [AGGREGATE_TYPE]: eventAggregateType,
+      [EVENT_TYPE]: eventType,
+      DATE: creationTime
+    }
+  });
+
+  return {
     payload: payload || 'Fake message',
     headers,
     offset: 5,
-    partition: 0,
+    partition,
     highWaterOffset: 6,
     key: '0',
-    timestamp,
-    swimlane: 0
-  })
+    timestamp: creationTime
+  };
 };
+
+const sleep = timeout => new Promise((resolve, reject) => setTimeout(() => resolve(), timeout));
 
 module.exports = {
   expectEnsureTopicExists,
@@ -150,5 +172,6 @@ module.exports = {
   expectMessageHeaders,
   expectKafkaMessage,
   expectMessageForDomainEvent,
-  fakeKafkaMessage
+  fakeKafkaMessage,
+  sleep
 };
