@@ -1,7 +1,6 @@
 const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
-const randomInt = require('random-int');
 const helpers = require('./lib/helpers');
 const MessageConsumer = require('../lib/kafka/MessageConsumer');
 const SwimlaneDispatcher = require('../lib/kafka/SwimlaneDispatcher');
@@ -49,16 +48,16 @@ describe('SwimlaneDispatcher', function () {
       const messageHandlers = {
         [topic]: async (message) => {
           console.log('Processing queue message:', message);
-              await randomSleep();
-              pushMessageToResults(message);
+          await helpers.randomSleep();
+          pushMessageToResults(message);
 
-              processedNum++;
-              if (processedNum >= expectedProcessedMessagesNum) {
-                console.log('resultsBySwimlane', resultsBySwimlane);
-                console.log('messagesBySwimlane', messagesBySwimlane);
-                expect(resultsBySwimlane).to.deep.eq(messagesBySwimlane);
-                resolve();
-              }
+          processedNum++;
+          if (processedNum >= expectedProcessedMessagesNum) {
+            console.log('resultsBySwimlane', resultsBySwimlane);
+            console.log('messagesBySwimlane', messagesBySwimlane);
+            expect(resultsBySwimlane).to.deep.eq(messagesBySwimlane);
+            resolve();
+          }
         }
       };
 
@@ -81,7 +80,6 @@ describe('SwimlaneDispatcher', function () {
     expect(swimlaneDispatcher).to.be.ok;
     expect(swimlaneDispatcher).to.haveOwnProperty('queues');
     expect(swimlaneDispatcher.queues).to.haveOwnProperty(topic);
-    console.log('swimlaneDispatcher.queues:', swimlaneDispatcher.queues);
     Object.keys(messagesBySwimlane).forEach((swimlane) => {
       expect(swimlaneDispatcher.queues[topic]).to.haveOwnProperty(swimlane);
       expect(swimlaneDispatcher.queues[topic][swimlane]).to.be.instanceOf(ObservableQueue);
@@ -91,12 +89,6 @@ describe('SwimlaneDispatcher', function () {
 
 function pushMessageToResults(message) {
   resultsBySwimlane[message.partitionId].push(message.payload);
-}
-
-async function randomSleep() {
-  const timeout = randomInt(100, 1000);
-  console.log('sleep ' + timeout);
-  await helpers.sleep(timeout);
 }
 
 function generateMessages() {
@@ -118,9 +110,11 @@ function generateMessages() {
 }
 
 function sendMessages(messages) {
-  const promises = [];
-  messages.forEach(message => {
-    promises.push(kafkaProducer.send(topic, message, message.partition));
+  return messages.reduce(sequenceKafkaSend, Promise.resolve());
+}
+
+function sequenceKafkaSend(promise, message) {
+  return new Promise((resolve) => {
+    resolve(promise.then(_ => kafkaProducer.send(topic, message, message.partition)));
   });
-  return Promise.all(promises);
 }

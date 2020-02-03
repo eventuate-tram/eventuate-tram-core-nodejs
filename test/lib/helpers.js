@@ -4,6 +4,7 @@ const MessageProducer = require('../../lib/MessageProducer');
 const IdGenerator = require('../../lib/IdGenerator');
 const DefaultChannelMapping = require('../../lib/DefaultChannelMapping');
 const { AGGREGATE_TYPE, EVENT_TYPE, AGGREGATE_ID } = require('../../lib/eventMessageHeaders');
+const randomInt = require('random-int');
 
 const idGenerator = new IdGenerator();
 const channelMapping = new DefaultChannelMapping(new Map());
@@ -163,6 +164,18 @@ const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partitio
 
 const sleep = timeout => new Promise((resolve, reject) => setTimeout(() => resolve(), timeout));
 
+async function randomSleep() {
+  const timeout = randomInt(100, 1000);
+  console.log('sleep ' + timeout);
+  await sleep(timeout);
+}
+
+function sequenceKafkaSend(promise, message) {
+  return new Promise((resolve) => {
+    resolve(promise.then(_ => kafkaProducer.send(topic, message, message.partition)));
+  });
+}
+
 module.exports = {
   expectEnsureTopicExists,
   putMessage,
@@ -173,5 +186,6 @@ module.exports = {
   expectKafkaMessage,
   expectMessageForDomainEvent,
   fakeKafkaMessage,
-  sleep
+  sleep,
+  randomSleep
 };
