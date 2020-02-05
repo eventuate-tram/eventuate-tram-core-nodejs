@@ -2,10 +2,7 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const MessageConsumer = require('../lib/kafka/MessageConsumer');
-const SwimlaneDispatcher = require('../lib/kafka/SwimlaneDispatcher');
-const ObservableQueue = require('../lib/ObservableQueue');
-const KafkaProducer = require('../lib/kafka/KafkaProducer');
+const { KafkaProducer, ObservableQueue, SwimlaneDispatcher, MessageConsumer } = require('../');
 
 chai.use(chaiAsPromised);
 

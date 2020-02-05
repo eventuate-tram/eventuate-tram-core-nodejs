@@ -4,8 +4,7 @@ const knex = require('../lib/mysql/knex');
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const helpers = require('./lib/helpers');
-const IdGenerator = require('../lib/IdGenerator');
-const MessageProducer = require('../lib/MessageProducer');
+const { IdGenerator, MessageProducer } = require('../');
 const { getMessageById } = require('../lib/mysql/eventuateCommonDbOperations');
 
 const idGenerator = new IdGenerator();

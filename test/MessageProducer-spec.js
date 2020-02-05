@@ -2,8 +2,7 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const IdGenerator = require('../lib/IdGenerator');
-const MessageProducer = require('../lib/MessageProducer');
+const { IdGenerator, MessageProducer } = require('../');
 
 chai.use(chaiAsPromised);
 

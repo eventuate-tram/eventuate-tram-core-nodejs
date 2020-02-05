@@ -2,10 +2,7 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const MessageConsumer = require('../lib/kafka/MessageConsumer');
-const IdGenerator = require('../lib/IdGenerator');
-const KafkaProducer = require('../lib/kafka/KafkaProducer');
-const MessageProducer = require('../lib/MessageProducer');
+const { MessageProducer, KafkaProducer, IdGenerator, MessageConsumer } = require('../');
 
 chai.use(chaiAsPromised);
 

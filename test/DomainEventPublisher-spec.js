@@ -2,11 +2,7 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const DomainEventPublisher = require('../lib/DomainEventPublisher');
-const MessageProducer = require('../lib/MessageProducer');
-const { EVENT_DATA, EVENT_TYPE } = require('../lib/eventMessageHeaders');
-const DefaultChannelMapping = require('../lib/DefaultChannelMapping');
-const KafkaConsumerGroup = require('../lib/kafka/KafkaConsumerGroup');
+const { KafkaConsumerGroup, DefaultChannelMapping, eventMessageHeaders: { EVENT_DATA, EVENT_TYPE }, MessageProducer, DomainEventPublisher } = require('../');
 
 chai.use(chaiAsPromised);
 
