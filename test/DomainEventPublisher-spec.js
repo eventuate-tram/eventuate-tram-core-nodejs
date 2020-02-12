@@ -3,6 +3,7 @@ const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
 const { KafkaConsumerGroup, DefaultChannelMapping, eventMessageHeaders: { EVENT_DATA, EVENT_TYPE }, MessageProducer, DomainEventPublisher } = require('../');
+const knex = require('../lib/mysql/knex');
 
 chai.use(chaiAsPromised);
 
@@ -41,8 +42,9 @@ describe('DomainEventPublisher', function () {
       });
 
       await kafkaConsumerGroup.subscribe({ groupId, topics: [ aggregateType ] });
-
-      await domainEventPublisher.publish(aggregateType, aggregateId, extraHeaders, [ event ]);
+      const trx = await knex.transaction();
+      await domainEventPublisher.publish(aggregateType, aggregateId, extraHeaders, [ event ], trx);
+      await trx.commit();
     });
   });
 });
