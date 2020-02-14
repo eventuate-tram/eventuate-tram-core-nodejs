@@ -12,7 +12,7 @@ const kafkaProducer = new KafkaProducer();
 const timeout = 25000;
 const topic = 'test-topic-swimlane-dispatcher';
 const eventAggregateType = 'Account';
-const eventType = 'charge';
+const eventType = 'CreditApproved';
 const expectedProcessedMessagesNum = 6;
 
 before(async () => await kafkaProducer.connect());
