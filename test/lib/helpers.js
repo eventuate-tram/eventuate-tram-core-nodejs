@@ -75,18 +75,18 @@ const expectMessageHeaders = (headers, headersData) => {
   expect(headers).to.haveOwnProperty('DATE');
   expect(headers.DATE).to.be.a('Number');
 
-  expect(headers).to.haveOwnProperty('AGGREGATE_TYPE');
-  expect(headers['AGGREGATE_TYPE']).to.be.a('String');
+  expect(headers).to.haveOwnProperty(AGGREGATE_TYPE);
+  expect(headers[AGGREGATE_TYPE]).to.be.a('String');
 
-  expect(headers).to.haveOwnProperty('EVENT_TYPE');
-  expect(headers['EVENT_TYPE']).to.be.a('String');
+  expect(headers).to.haveOwnProperty(EVENT_TYPE);
+  expect(headers[EVENT_TYPE]).to.be.a('String');
 
   if (headersData) {
     expect(headers.ID).eq(headersData.ID);
     expect(headers.DATE).eq(headersData.DATE);
-    expect(headers.AGGREGATE_TYPE).eq(headersData[AGGREGATE_TYPE]);
+    expect(headers[AGGREGATE_TYPE]).eq(headersData[AGGREGATE_TYPE]);
     expect(headers.PARTITION_ID).eq(headersData.PARTITION_ID.toString());
-    expect(headers.EVENT_TYPE).eq(headersData[EVENT_TYPE]);
+    expect(headers[EVENT_TYPE]).eq(headersData[EVENT_TYPE]);
     expect(headers.DESTINATION).eq(headersData.destination);
   }
 };
