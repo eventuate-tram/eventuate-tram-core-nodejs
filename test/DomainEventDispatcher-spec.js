@@ -42,7 +42,7 @@ describe('DomainEventDispatcher', function () {
         domainEventNameMapping
       });
       await domainEventDispatcher.initialize();
-      await domainEventPublisher.publish(aggregateType, aggregateId, extraHeaders, [ event ]);
+      await domainEventPublisher.publish(aggregateType, aggregateId, [ event ], { extraHeaders });
     });
   });
 });
