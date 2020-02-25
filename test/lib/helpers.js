@@ -4,6 +4,7 @@ const MessageProducer = require('../../lib/MessageProducer');
 const IdGenerator = require('../../lib/IdGenerator');
 const DefaultChannelMapping = require('../../lib/DefaultChannelMapping');
 const { AGGREGATE_TYPE, EVENT_TYPE, AGGREGATE_ID } = require('../../lib/eventMessageHeaders');
+const randomInt = require('random-int');
 
 const idGenerator = new IdGenerator();
 const channelMapping = new DefaultChannelMapping(new Map());
@@ -74,18 +75,18 @@ const expectMessageHeaders = (headers, headersData) => {
   expect(headers).to.haveOwnProperty('DATE');
   expect(headers.DATE).to.be.a('Number');
 
-  expect(headers).to.haveOwnProperty('AGGREGATE_TYPE');
-  expect(headers['AGGREGATE_TYPE']).to.be.a('String');
+  expect(headers).to.haveOwnProperty(AGGREGATE_TYPE);
+  expect(headers[AGGREGATE_TYPE]).to.be.a('String');
 
-  expect(headers).to.haveOwnProperty('EVENT_TYPE');
-  expect(headers['EVENT_TYPE']).to.be.a('String');
+  expect(headers).to.haveOwnProperty(EVENT_TYPE);
+  expect(headers[EVENT_TYPE]).to.be.a('String');
 
   if (headersData) {
     expect(headers.ID).eq(headersData.ID);
     expect(headers.DATE).eq(headersData.DATE);
-    expect(headers.AGGREGATE_TYPE).eq(headersData[AGGREGATE_TYPE]);
+    expect(headers[AGGREGATE_TYPE]).eq(headersData[AGGREGATE_TYPE]);
     expect(headers.PARTITION_ID).eq(headersData.PARTITION_ID.toString());
-    expect(headers.EVENT_TYPE).eq(headersData[EVENT_TYPE]);
+    expect(headers[EVENT_TYPE]).eq(headersData[EVENT_TYPE]);
     expect(headers.DESTINATION).eq(headersData.destination);
   }
 };
@@ -163,6 +164,18 @@ const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partitio
 
 const sleep = timeout => new Promise((resolve, reject) => setTimeout(() => resolve(), timeout));
 
+async function randomSleep() {
+  const timeout = randomInt(100, 1000);
+  console.log('sleep ' + timeout);
+  await sleep(timeout);
+}
+
+function sequenceKafkaSend(promise, message) {
+  return new Promise((resolve) => {
+    resolve(promise.then(_ => kafkaProducer.send(topic, message, message.partition)));
+  });
+}
+
 module.exports = {
   expectEnsureTopicExists,
   putMessage,
@@ -173,5 +186,6 @@ module.exports = {
   expectKafkaMessage,
   expectMessageForDomainEvent,
   fakeKafkaMessage,
-  sleep
+  sleep,
+  randomSleep
 };

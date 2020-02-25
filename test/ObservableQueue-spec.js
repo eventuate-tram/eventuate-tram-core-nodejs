@@ -3,7 +3,7 @@ const randomInt = require('random-int');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const ObservableQueue = require('../lib/ObservableQueue');
+const { ObservableQueue } = require('../');
 
 const topic = 'topic1';
 const executor = {};

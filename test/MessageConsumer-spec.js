@@ -2,10 +2,8 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const MessageConsumer = require('../lib/kafka/MessageConsumer');
-const IdGenerator = require('../lib/IdGenerator');
-const KafkaProducer = require('../lib/kafka/KafkaProducer');
-const MessageProducer = require('../lib/MessageProducer');
+const { AGGREGATE_TYPE: AGGREGATE_TYPE_HEADER, EVENT_TYPE: EVENT_TYPE_HEADER, AGGREGATE_ID: AGGREGATE_ID_HEADER } = require('../lib/eventMessageHeaders');
+const { MessageProducer, KafkaProducer, IdGenerator, MessageConsumer } = require('../');
 
 chai.use(chaiAsPromised);
 
@@ -54,7 +52,8 @@ describe('MessageConsumer', function () {
 
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().toUTCString();
-        await kafkaProducer.send(topic, makeMessage(messageId, creationTime));
+        const message = await makeMessage(messageId, creationTime);
+        await kafkaProducer.send(topic, message);
       } catch (err) {
         reject(err);
       }
@@ -62,8 +61,16 @@ describe('MessageConsumer', function () {
   });
 });
 
-function makeMessage(messageId, creationTime) {
-   const headers = messageProducer.prepareMessageHeaders(topic, { headers: { ID: messageId, PARTITION_ID: 0, 'event-aggregate-type': eventAggregateType, 'event-type': eventType, DATE: creationTime }});
+async function makeMessage(messageId, creationTime) {
+  const headers = await messageProducer.prepareMessageHeaders(topic, {
+   headers: {
+     ID: messageId,
+     PARTITION_ID: 0,
+     [AGGREGATE_TYPE_HEADER]: eventAggregateType,
+     [EVENT_TYPE_HEADER]: eventType,
+     DATE: creationTime
+   }}
+  );
   return JSON.stringify({
     payload: JSON.stringify({ message: 'Test kafka subscription' }),
     headers,

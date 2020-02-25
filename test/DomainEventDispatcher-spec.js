@@ -2,13 +2,7 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const { EVENT_DATA, EVENT_TYPE } = require('../lib/eventMessageHeaders');
-const DomainEventPublisher = require('../lib/DomainEventPublisher');
-const DomainEventDispatcher = require('../lib/DomainEventDispatcher');
-const MessageProducer = require('../lib/MessageProducer');
-const DefaultChannelMapping = require('../lib/DefaultChannelMapping');
-const DefaultDomainEventNameMapping = require('../lib/DefaultDomainEventNameMapping');
-const MessageConsumer = require('../lib/kafka/MessageConsumer');
+const { MessageConsumer, DefaultDomainEventNameMapping, DefaultChannelMapping, MessageProducer, DomainEventDispatcher, DomainEventPublisher } = require('../');
 
 chai.use(chaiAsPromised);
 
@@ -20,8 +14,8 @@ const messageConsumer = new MessageConsumer();
 
 const aggregateType = 'Account';
 const aggregateId = 'Fake_aggregate_id';
-const eventType = 'charge';
-const event = { [EVENT_DATA]: { amount: 100 }, [EVENT_TYPE]: 'charge' };
+const eventType = 'CreditApproved';
+const event = { amount: 10, _type: eventType };
 const eventDispatcherId = 'test-domain-event-dispatcher-id';
 const timeout = 20000;
 
@@ -48,7 +42,7 @@ describe('DomainEventDispatcher', function () {
         domainEventNameMapping
       });
       await domainEventDispatcher.initialize();
-      await domainEventPublisher.publish(aggregateType, aggregateId, extraHeaders, [ event ]);
+      await domainEventPublisher.publish(aggregateType, aggregateId, [ event ], { extraHeaders });
     });
   });
 });

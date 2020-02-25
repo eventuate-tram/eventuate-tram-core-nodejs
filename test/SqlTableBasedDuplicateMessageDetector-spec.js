@@ -3,9 +3,8 @@ const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
 const knex = require('../lib/mysql/knex');
-const IdGenerator = require('../lib/IdGenerator');
+const { IdGenerator, SqlTableBasedDuplicateMessageDetector } = require('../');
 
-const SqlTableBasedDuplicateMessageDetector = require('../lib/SqlTableBasedDuplicateMessageDetector');
 const idGenerator = new IdGenerator();
 
 describe('SqlTableBasedDuplicateMessageDetector', async () => {

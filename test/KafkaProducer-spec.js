@@ -2,7 +2,7 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const KafkaProducer = require('../lib/kafka/KafkaProducer');
+const { KafkaProducer } = require('../');
 
 const timeout = 20000;
 const topic = 'test-producer-topic';
