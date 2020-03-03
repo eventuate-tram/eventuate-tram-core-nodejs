@@ -42,6 +42,7 @@ describe('DomainEventPublisher', function () {
     return new Promise(async (resolve) => {
       kafkaConsumerGroup.on('message', (message) => {
         console.log('on message', message);
+        helpers.expectKafkaMessage(message);
         resolve();
       });
 

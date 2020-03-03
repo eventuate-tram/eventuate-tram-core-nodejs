@@ -15,7 +15,7 @@ const messageConsumer = new MessageConsumer();
 const aggregateType = 'Account';
 const aggregateId = 'Fake_aggregate_id';
 const eventType = 'CreditApproved';
-const event = { amount: 10, _type: eventType };
+const expectedEvent = { amount: 10, _type: eventType };
 const eventDispatcherId = 'test-domain-event-dispatcher-id';
 const timeout = 20000;
 
@@ -24,13 +24,18 @@ let extraHeaders = {};
 describe('DomainEventDispatcher', function () {
   this.timeout(timeout);
 
+  after(async () => {
+    return messageConsumer.unsubscribe();
+  });
+
   it('should dispatch an event', async () => {
     return new Promise(async (resolve) => {
 
       const domainEventHandlers = {
         [aggregateType]: {
-          [eventType]: (message) => {
-            console.log('handled message', message);
+          [eventType]: (event) => {
+            console.log('handled event', event);
+            helpers.expectDomainEvent(event, expectedEvent);
             resolve();
           }
         }
@@ -42,7 +47,7 @@ describe('DomainEventDispatcher', function () {
         domainEventNameMapping
       });
       await domainEventDispatcher.initialize();
-      await domainEventPublisher.publish(aggregateType, aggregateId, [ event ], { extraHeaders });
+      await domainEventPublisher.publish(aggregateType, aggregateId, [ expectedEvent ], { extraHeaders });
     });
   });
 });
