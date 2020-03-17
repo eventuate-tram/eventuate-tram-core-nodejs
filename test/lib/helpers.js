@@ -73,20 +73,11 @@ const expectMessageHeaders = (headers, headersData) => {
   expect(headers.DESTINATION).to.be.a('String');
 
   expect(headers).to.haveOwnProperty('DATE');
-  expect(headers.DATE).to.be.a('Number');
-
-  expect(headers).to.haveOwnProperty(AGGREGATE_TYPE);
-  expect(headers[AGGREGATE_TYPE]).to.be.a('String');
-
-  expect(headers).to.haveOwnProperty(EVENT_TYPE);
-  expect(headers[EVENT_TYPE]).to.be.a('String');
 
   if (headersData) {
     expect(headers.ID).eq(headersData.ID);
     expect(headers.DATE).eq(headersData.DATE);
-    expect(headers[AGGREGATE_TYPE]).eq(headersData[AGGREGATE_TYPE]);
     expect(headers.PARTITION_ID).eq(headersData.PARTITION_ID.toString());
-    expect(headers[EVENT_TYPE]).eq(headersData[EVENT_TYPE]);
     expect(headers.DESTINATION).eq(headersData.destination);
   }
 };
@@ -117,7 +108,7 @@ const expectKafkaMessage = (message) => {
   }
 };
 
-const expectMessageForDomainEvent = (message, payload, ) => {
+const expectMessageForDomainEvent = (message, payload) => {
   expect(message).to.haveOwnProperty('payload');
   expect(message.payload).to.be.a('String');
   if (typeof (payload === 'object')) {
@@ -132,11 +123,39 @@ const expectMessageForDomainEvent = (message, payload, ) => {
   expect(headers).to.haveOwnProperty('PARTITION_ID');
   expect(headers.PARTITION_ID).to.be.a('String');
 
-  expect(headers).to.haveOwnProperty('event-aggregate-type');
-  expect(headers['event-aggregate-type']).to.be.a('String');
+  expect(headers).to.haveOwnProperty(AGGREGATE_TYPE);
+  expect(headers[AGGREGATE_TYPE]).to.be.a('String');
 
-  expect(headers).to.haveOwnProperty('event-type');
-  expect(headers['event-type']).to.be.a('String');
+  expect(headers).to.haveOwnProperty(AGGREGATE_ID);
+  expect(headers[AGGREGATE_ID]).to.be.a('String');
+
+  expect(headers).to.haveOwnProperty(EVENT_TYPE);
+  expect(headers[EVENT_TYPE]).to.be.a('String');
+};
+
+const expectDomainEvent = (event, payload) => {
+  expect(event).to.haveOwnProperty('payload');
+  expect(event.payload).to.be.a('String');
+
+  if (typeof (payload === 'object')) {
+    payload = JSON.stringify(payload);
+  }
+  expect(event.payload).eq(payload);
+
+  expect(event).to.haveOwnProperty('partitionId');
+  expect(event.partitionId).to.be.a('String');
+
+  expect(event).to.haveOwnProperty(AGGREGATE_TYPE);
+  expect(event[AGGREGATE_TYPE]).to.be.a('String');
+
+  expect(event).to.haveOwnProperty(AGGREGATE_ID);
+  expect(event[AGGREGATE_ID]).to.be.a('String');
+
+  expect(event).to.haveOwnProperty(EVENT_TYPE);
+  expect(event[EVENT_TYPE]).to.be.a('String');
+
+  expect(event).to.haveOwnProperty('creationTime');
+  expect(event.creationTime).to.be.a('String');
 };
 
 const fakeKafkaMessage = async ({ topic, eventAggregateType, eventType, partition = 0, payload }) => {
@@ -187,5 +206,6 @@ module.exports = {
   expectMessageForDomainEvent,
   fakeKafkaMessage,
   sleep,
-  randomSleep
+  randomSleep,
+  expectDomainEvent,
 };
