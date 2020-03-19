@@ -1,0 +1,197 @@
+[[getting-started]]
+== Getting started with Eventuate Tram for Node.js
+
+Learn how to get started with https://github.com/eventuate-tram/eventuate-tram-core[Eventuate Tram], a framework for transactional messaging.
+Eventuate Tram sends and receives messages as part of a database transaction ensuring that your application atomically updates the database and publishes messages.
+Currently, it supports the following databases:
+
+* Transaction log tailing: MySQL
+
+And, the following message brokers:
+
+* Apache Kafka
+
+=== See also
+
+* link:./about-eventuate-tram.html[Overview of EventuateTram]
+* https://eventuate.io/exampleapps.html[Tram example applications]
+* The https://github.com/eventuate-tram/eventuate-tram-core[Eventuate Tram Github repository]
+* The https://github.com/eventuate-tram/eventuate-tram-sagas[Eventuate Tram Sagas Github repository]
+* The https://www.manning.com/books/microservices-patterns[Microservices Patterns] book
+
+=== JavaDocs
+
+* See the https://eventuate.io/docs/javadoc/eventuate-tram/eventuate-tram.html[Eventuate Tram JavaDocs].
+
+=== Project setup
+
+Latest library version:
+
+[![NPM Version][npm-image]][npm-url]
+
+=== Transactional messages
+
+Eventuate Tram has APIs for sending and receiving messages as part of a database transaction.
+
+==== Sending messages
+
+Send a message using `MessageProducer`:
+
+[source,javascript]
+----
+const { MessageProducer } = require('eventuate-tram-core-nodejs');
+const messageProducer = new MessageProducer();
+const topic = 'test-topic';
+
+const payload = { message: 'Test message' };
+const message = { payload, headers: { PARTITION_ID: 0 }};
+await messageProducer.send(topic, message);
+----
+
+See this example of https://github.com/eventuate-tram/eventuate-tram-core-nodejs/blob/master/test/MessageProducer-spec.js[sending messages].
+
+==== Consuming messages
+
+Receive messages using `MessageConsumer`:
+
+[source,javascript]
+----
+const { MessageConsumer } = require('eventuate-tram-core-nodejs');
+
+const messageConsumer = new MessageConsumer();
+const topic = 'test-topic';
+const subscriberId = 'test-message-consumer-sb-id';
+
+await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler: (message) => {
+  console.log(message);
+  return Promise.resolve();
+}});
+----
+
+See this example of https://github.com/eventuate-tram/eventuate-tram-core-nodejs/blob/master/test/MessageConsumer-spec.js[consuming messages].
+
+=== Transactional domain events
+
+The domain event package builds on the transaction messaging APIs.
+
+==== Publishing domain events
+
+Publish domain events using `DomainEventPublisher`:
+
+[source,javascript]
+----
+const knex = require('knex') ({
+  client: 'mysql',
+  connection: { ... },
+  debug: true,
+  pool: { min: 0, max: 10 }
+});
+
+const { DefaultChannelMapping, MessageProducer, DomainEventPublisher } = require('eventuate-tram-core-nodejs');
+const channelMapping = new DefaultChannelMapping(new Map());
+const messageProducer = new MessageProducer({ channelMapping });
+const domainEventPublisher = new DomainEventPublisher({ messageProducer });
+let extraHeaders = {};
+
+const aggregateType = 'Account';
+const aggregateId = 'Fake_aggregate_id';
+const events = [
+  { amount: 10, _type: 'CreditApproved' },
+  { amount: 20, _type: 'CreditApproved' },
+  { amount: 30, _type: 'CreditApproved' },
+  { amount: 40, _type: 'CreditApproved' },
+];
+
+const trx = await knex.transaction();
+await domainEventPublisher.publish(aggregateType, aggregateId, events, { extraHeaders, trx });
+await trx.commit();
+----
+
+See this example of https://github.com/eventuate-tram/eventuate-tram-core-nodejs/blob/master/test/DomainEventPublisher-spec.js[Publishing events].
+
+
+==== Consuming domain events
+
+First, define `DomainEventHandlers`:
+
+[source,javascript]
+----
+
+const aggregateType = 'Account';
+const eventType = 'CreditApproved';
+
+const domainEventHandlers = {
+        [aggregateType]: {
+          [eventType]: async (event) => {
+            console.log(event);
+          }
+        }
+      };
+----
+
+Second, configure a `DomainEventDispatcher`:
+
+[source,javascript]
+----
+const { MessageConsumer, DefaultDomainEventNameMapping, DomainEventDispatcher } = require('eventuate-tram-core-nodejs');
+
+const domainEventNameMapping = new DefaultDomainEventNameMapping();
+const messageConsumer = new MessageConsumer();
+const eventDispatcherId = 'test-domain-event-dispatcher-id';
+
+domainEventDispatcher = new DomainEventDispatcher({ eventDispatcherId,
+    domainEventHandlers,
+    messageConsumer,
+    domainEventNameMapping
+});
+await domainEventDispatcher.initialize();
+----
+
+See this example of https://github.com/eventuate-tram/eventuate-tram-core-nodejs/blob/master/test/DomainEventDispatcher-spec.js[Dispatching domain events].
+
+=== Configuring the transport
+
+===== Setup environment variables
+
+    EVENTUATE_TRAM_KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+    EVENTUATE_TRAM_MYSQL_HOST=localhost
+    EVENTUATE_TRAM_MYSQL_PORT=3306
+    EVENTUATE_TRAM_MYSQL_DATABASE=eventuate
+    EVENTUATE_TRAM_MYSQL_USERNAME=mysqluser
+    EVENTUATE_TRAM_MYSQL_PASSWORD=mysqlpw
+
+=== Running the CDC service
+
+In addition to a database and message broker, you will need to run the link:./cdc-configuration.html[Eventuate Tram CDC] service.
+It reads events inserted into the database and publishes them to the message broker.
+It is written using Spring Boot.
+The easiest way to run this service during development is to use Docker Compose.
+
+The https://github.com/eventuate-tram/eventuate-tram-core-examples-basic[Eventuate Tram Code Basic examples] project has an example https://github.com/eventuate-tram/eventuate-tram-core-examples-basic/blob/master/docker-compose.yml[docker-compose.yml file].
+
+[source,yaml]
+----
+cdcservice:
+  image: eventuateio/eventuate-tram-cdc-mysql-service:0.4.0.RELEASE
+  ports:
+    - "8099:8080"
+  depends_on:
+    - mysql
+    - kafka
+    - zookeeper
+  environment:
+    SPRING_DATASOURCE_URL: jdbc:mysql://mysql/eventuate
+    SPRING_DATASOURCE_USERNAME: mysqluser
+    SPRING_DATASOURCE_PASSWORD: mysqlpw
+    SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver
+    EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
+    EVENTUATELOCAL_CDC_DB_USER_NAME: root
+    EVENTUATELOCAL_CDC_DB_PASSWORD: rootpassword
+    EVENTUATELOCAL_CDC_READER_NAME: MySqlReader
+    EVENTUATELOCAL_CDC_OFFSET_STORE_KEY: MySqlBinlog
+    EVENTUATELOCAL_CDC_MYSQL_BINLOG_CLIENT_UNIQUE_ID: 1234567890
+    EVENTUATELOCAL_CDC_READ_OLD_DEBEZIUM_DB_OFFSET_STORAGE_TOPIC: "false"
+----
+
+For more information, please see link:./cdc-configuration.html[Eventuate Tram CDC]
