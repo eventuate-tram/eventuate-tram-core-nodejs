@@ -1,6 +1,6 @@
 {
   "name": "eventuate-tram-core-nodejs",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eventuate-incubator/eventuate-tram-core-nodejs.git"
+    "url": "git+https://github.com/eventuate-tram/eventuate-tram-core-nodejs.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": " Apache License, Version 2.0",
   "bugs": {
-    "url": "https://github.com/eventuate-incubator/eventuate-tram-core-nodejs/issues"
+    "url": "https://github.com/eventuate-tram/eventuate-tram-core-nodejs/issues"
   },
-  "homepage": "https://github.com/eventuate-incubator/eventuate-tram-core-nodejs#readme",
+  "homepage": "https://github.com/eventuate-tram/eventuate-tram-core-nodejs#readme",
   "dependencies": {
     "getmac": "^1.4.6",
     "invariant": "^2.2.4",
