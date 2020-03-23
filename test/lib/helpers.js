@@ -135,12 +135,9 @@ const expectMessageForDomainEvent = (message, payload) => {
 
 const expectDomainEvent = (event, payload) => {
   expect(event).to.haveOwnProperty('payload');
-  expect(event.payload).to.be.a('String');
+  expect(event.payload).to.be.an('Object');
 
-  if (typeof (payload === 'object')) {
-    payload = JSON.stringify(payload);
-  }
-  expect(event.payload).eq(payload);
+  expect(event.payload).deep.eq(payload);
 
   expect(event).to.haveOwnProperty('partitionId');
   expect(event.partitionId).to.be.a('String');
