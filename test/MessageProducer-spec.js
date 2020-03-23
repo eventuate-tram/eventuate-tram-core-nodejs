@@ -3,6 +3,7 @@ const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
 const { IdGenerator, MessageProducer } = require('../');
+const knex = require('../lib/mysql/knex');
 
 chai.use(chaiAsPromised);
 
@@ -32,6 +33,9 @@ describe('MessageProducer', function () {
     const messageId = await idGenerator.genIdInternal();
     const payload = { message: 'Test kafka subscription' };
     const message = { payload, headers: { ID: messageId, PARTITION_ID: 0, DATE: new Date().getTime(), 'event-aggregate-id': eventAggregateId, 'event-aggregate-type': eventAggregateType, 'event-type': eventType }};
-    await messageProducer.send(topic, message);
+
+    const trx = await knex.transaction();
+    await messageProducer.send(topic, message, trx);
+    await trx.commit();
   });
 });
