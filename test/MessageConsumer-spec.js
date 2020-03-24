@@ -2,7 +2,6 @@ const chai = require('chai');
 const { expect } = chai;
 const chaiAsPromised = require('chai-as-promised');
 const helpers = require('./lib/helpers');
-const { AGGREGATE_TYPE: AGGREGATE_TYPE_HEADER, EVENT_TYPE: EVENT_TYPE_HEADER, AGGREGATE_ID: AGGREGATE_ID_HEADER } = require('../lib/eventMessageHeaders');
 const { MessageProducer, KafkaProducer, IdGenerator, MessageConsumer } = require('../');
 
 chai.use(chaiAsPromised);
@@ -14,12 +13,8 @@ const messageProducer = new MessageProducer();
 
 const timeout = 20000;
 const topic = 'test-topic';
-const eventAggregateType = 'Account';
-const eventType = 'charge';
 
-before(async () => {
-  await kafkaProducer.connect();
-});
+before(async () => await kafkaProducer.connect());
 
 after(async () => {
   await Promise.all([
@@ -39,17 +34,14 @@ describe('MessageConsumer', function () {
   it('should receive Kafka message', async () => {
     const subscriberId = 'test-message-consumer-sb-id';
     return new Promise(async (resolve, reject) => {
-      const messageHandler = (message) => {
-        console.log('messageHandler');
-        console.log(message);
-        // TODO: expect message
-        resolve();
-        return Promise.resolve();
-      };
 
       try {
-        await messageConsumer.subscribe({ subscriberId, topics: [ topic ], messageHandler });
+        await messageConsumer.subscribe({ subscriberId, topics: [topic], messageHandler: async message => resolve() });
+      } catch (err) {
+        reject(err);
+      }
 
+      try {
         const messageId = await idGenerator.genIdInternal();
         const creationTime = new Date().toUTCString();
         const message = await makeMessage(messageId, creationTime);
@@ -66,8 +58,6 @@ async function makeMessage(messageId, creationTime) {
    headers: {
      ID: messageId,
      PARTITION_ID: 0,
-     [AGGREGATE_TYPE_HEADER]: eventAggregateType,
-     [EVENT_TYPE_HEADER]: eventType,
      DATE: creationTime
    }}
   );
