@@ -12,10 +12,6 @@ const messageProducer = new MessageProducer();
 
 const timeout = 20000;
 const topic = 'test-topic';
-const eventAggregateType = 'Account';
-const eventType = 'charge';
-const eventAggregateId = 'Fake_aggregate_id';
-
 describe('MessageProducer', function () {
   this.timeout(timeout);
 
@@ -23,19 +19,24 @@ describe('MessageProducer', function () {
     it('should return correct headers', async () => {
       const messageId = await idGenerator.genIdInternal();
       const creationTime = new Date().getTime();
-      const headersData = { ID: messageId, PARTITION_ID: 0, 'event-aggregate-type': eventAggregateType, 'event-type': eventType, DATE: creationTime };
+      const headersData = {
+        ID: messageId,
+        PARTITION_ID: 0,
+        DATE: creationTime
+      };
       const headers = await messageProducer.prepareMessageHeaders(topic, { headers: headersData });
-      helpers.expectMessageHeaders(headers, Object.assign(headersData, {destination: topic}));
+      helpers.expectMessageHeaders(headers, Object.assign(headersData, { destination: topic }));
     });
   });
 
-  it('should send Message involving CDC', async () => {
-    const messageId = await idGenerator.genIdInternal();
-    const payload = { message: 'Test kafka subscription' };
-    const message = { payload, headers: { ID: messageId, PARTITION_ID: 0, DATE: new Date().getTime(), 'event-aggregate-id': eventAggregateId, 'event-aggregate-type': eventAggregateType, 'event-type': eventType }};
+  describe('send a message', () => {
+    it('should send Message involving CDC', async () => {
+      const payload = { message: 'Test kafka subscription' };
+      const message = { payload, headers: { PARTITION_ID: 0, DATE: new Date().getTime() }};
 
-    const trx = await knex.transaction();
-    await messageProducer.send(topic, message, trx);
-    await trx.commit();
+      const trx = await knex.transaction();
+      await messageProducer.send(topic, message, trx);
+      await trx.commit();
+    });
   });
 });
